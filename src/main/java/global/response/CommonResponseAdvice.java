@@ -49,9 +49,6 @@ public class CommonResponseAdvice implements ResponseBodyAdvice<Object> {
             return body;
         }
 
-        // 내부 성공 코드(팀 컨벤션)
-        int successCode = 1000;
-
         // 상태별 기본 메시지
         String message = switch (status) {
             case 200 -> "요청이 성공적으로 처리되었습니다.";
@@ -61,6 +58,6 @@ public class CommonResponseAdvice implements ResponseBodyAdvice<Object> {
         };
 
         // 정상 래핑
-        return CommonResponse.of(status, successCode, message, body);
+        return CommonResponse.of(status, message, body);
     }
 }
