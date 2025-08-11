@@ -17,3 +17,5 @@ spring:
         hbm2ddl:
           auto: create #update
         default_batch_fetch_size: 1000
+app:
+  server-uri: ${SERVER_URI:http://localhost:8080}
