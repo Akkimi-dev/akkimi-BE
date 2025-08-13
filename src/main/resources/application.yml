@@ -19,3 +19,16 @@ spring:
         default_batch_fetch_size: 1000
 app:
   server-uri: ${SERVER_URI:http://localhost:8080}
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration: 3600000       # 1시간 (1 * 60 * 60 * 1000)
+  refresh-token-expiration: 1209600000   # 14일 (14 * 24 * 60 * 60 * 1000)
+
+kakao:
+  client-id: ${KAKAO_API_KEY}
+  client-secret: ${KAKAO_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
+  auth-uri: https://kauth.kakao.com/oauth/authorize
+  token-uri: https://kauth.kakao.com/oauth/token
+  user-info-uri: https://kapi.kakao.com/v2/user/me

@@ -3,6 +3,12 @@ package akkimi_BE.aja.entity;
 import akkimi_BE.aja.entity.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.Collection;
+import java.util.Collections;
 
 @Entity
 @Getter
@@ -10,7 +16,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)    // Builder/Factory 전용
 @Builder
 @Table(name = "users")
-public class User extends BaseTimeEntity {
+public class User extends BaseTimeEntity implements UserDetails {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
@@ -24,11 +30,27 @@ public class User extends BaseTimeEntity {
     @JoinColumn(name = "character_id")
     private Character character;
 
-    @Column(name = "kakao_id")
-    private String kakaoId;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Builder.Default
+    private Role role = Role.USER;
 
-    @Column(name = "email")
+    @Enumerated(EnumType.STRING)
+    private SocialType socialType;
+
+    @Column(name = "social_id", length = 100)
+    private String socialId; // 소셜 전용, 로컬은 NULL
+
+    @Column(length = 100)
     private String email;
+
+    @Column(length = 100)
+    private String passwordHash; // 로컬 전용
+
+    /*
+    private Boolean emailVerified;
+    private LocalDate emailVerifiedAt;
+     */
 
     @Column(name = "phone_number")
     private String phoneNumber;
@@ -41,4 +63,23 @@ public class User extends BaseTimeEntity {
 
     @Column(name = "region")
     private String region;
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getPassword() {
+        return "";
+    }
+
+    @Override
+    public String getUsername() {
+        return "";
+    }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
 }
