@@ -93,4 +93,18 @@ jobs:
           '
       - name: Health check
         run: |
-          curl -fsS "${{ secrets.ENV_SERVER_URI }}/actuator/health"
+          set -e
+          URL="${{ secrets.SERVER_URI }}/actuator/health"
+          echo "Checking $URL ..."
+          for i in {1..15}; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+          if [ "$code" = "200" ]; then
+            echo "Health OK (200)"
+            curl -s "$URL"
+            exit 0
+          fi
+          echo "Try $i/15: HTTP $code (waiting 3s)"
+          sleep 3
+          done
+          echo "Health check failed"
+          exit 1
