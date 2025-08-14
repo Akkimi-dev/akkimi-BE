@@ -47,16 +47,8 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(length = 100)
     private String passwordHash; // 로컬 전용
 
-    /*
-    private Boolean emailVerified;
-    private LocalDate emailVerifiedAt;
-     */
-
     @Column(name = "phone_number")
     private String phoneNumber;
-
-    @Column(name = "profile_image")
-    private String profileImage;
 
     @Column(name = "nickname", length = 50)
     private String nickname;
@@ -81,5 +73,13 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void changeCurrentMaltu(Long maltuId) {
+        this.currentMaltuId = maltuId;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
     }
 }
