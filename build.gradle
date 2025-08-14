@@ -7,6 +7,14 @@ plugins {
 group = 'akkimi-BE'
 version = '0.0.1-SNAPSHOT'
 
+bootJar {
+	archiveFileName = 'aja-0.0.1-SNAPSHOT.jar'  // 산출물 이름 고정
+}
+
+jar {
+	enabled = false    // plain JAR 생성 막기
+}
+
 java {
 	toolchain {
 		languageVersion = JavaLanguageVersion.of(17)
