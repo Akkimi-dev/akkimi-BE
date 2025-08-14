@@ -93,4 +93,4 @@ jobs:
           '
       - name: Health check
         run: |
-          curl -fsS http://${{ secrets.EC2_HOST }}:8080/actuator/health
+          curl -fsS "${{ secrets.ENV_SERVER_URI }}/actuator/health"
