@@ -94,7 +94,7 @@ jobs:
       - name: Health check
         run: |
           set -e
-          URL="${{ secrets.SERVER_URI }}/actuator/health"
+          URL="${{ secrets.ENV_SERVER_URI }}/actuator/health"
           echo "Checking $URL ..."
           for i in {1..15}; do
             code=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
