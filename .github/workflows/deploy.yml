@@ -56,14 +56,17 @@ jobs:
         run: |
           # 따옴표 없는 EOF로 GitHub Secrets 값을 실제로 주입합니다.
           cat > .env <<EOF
+          SERVER_URI=${{ secrets.ENV_SERVER_URI }}
+          
           DB_URL=${{ secrets.ENV_DB_URL }}
           DB_USERNAME=${{ secrets.ENV_DB_USERNAME }}
           DB_PASSWORD=${{ secrets.ENV_DB_PASSWORD }}
+          
           JWT_SECRET=${{ secrets.ENV_JWT_SECRET }}
           JWT_ACCESS_TOKEN_EXPIRATION=${{ secrets.ENV_JWT_ACCESS_EXPIRATION }}
           JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.ENV_JWT_REFRESH_EXPIRATION }}
+          
           KAKAO_CLIENT_ID=${{ secrets.ENV_KAKAO_CLIENT_ID }}
-          KAKAO_CLIENT_SECRET=${{ secrets.ENV_KAKAO_CLIENT_SECRET }}
           KAKAO_REDIRECT_URI=${{ secrets.ENV_KAKAO_REDIRECT_URI }}
           EOF
 
