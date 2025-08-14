@@ -100,7 +100,7 @@ jobs:
             code=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
           if [ "$code" = "200" ]; then
             echo "Health OK (200)"
-            curl -s "$URL"
+            curl -s -L "$URL"
             exit 0
           fi
           echo "Try $i/15: HTTP $code (waiting 3s)"
