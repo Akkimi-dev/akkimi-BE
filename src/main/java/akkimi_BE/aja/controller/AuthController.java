@@ -16,7 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Slf4j
 public class AuthController {
@@ -63,5 +63,11 @@ public class AuthController {
     @PostMapping("/logout")
     public Boolean logout(Authentication authentication, @RequestBody LogoutRequestDto logoutRequestDto) {
         return oAuthService.logout(authentication, logoutRequestDto.getRefreshToken());
+    }
+    
+    @GetMapping("/callback")
+    public String kakaoCallback() {
+        // 정적 HTML 파일로 리다이렉트
+        return "redirect:/callback.html";
     }
 }

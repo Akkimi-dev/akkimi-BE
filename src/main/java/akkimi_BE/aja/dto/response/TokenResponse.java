@@ -24,7 +24,7 @@ public class TokenResponse {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class UserInfo {
-        private Long id;
+        private Long userId;
         private String socialId;
         private String nickname;
         private String role;

@@ -79,17 +79,14 @@ public class SecurityConfig {
 
                 // === 요청 권한 설정 ===
                 .authorizeHttpRequests(authz -> authz
-                        // 인증 없이 접근 가능한 경로들
                         .requestMatchers(
                                 "/",                    // 메인 페이지
-                                "/auth/kakao",            // 인증 API (프론트 주도 OAuth)
-                                "/auth/**",
+                                "/api/v1/auth/kakao", //카카오 로그인
+                                "/api/v1/auth/refresh", //토큰 재발급
                                 "/h2-console/**",      // H2 데이터베이스 콘솔
-                                "/api/auth/**",   // 인증 관련 API
-                                "/api/oauth/**"  // OAuth API (프론트 주도 방식)
+                                "/favicon.ico"
                         ).permitAll()
 
-                        // 나머지 모든 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
 

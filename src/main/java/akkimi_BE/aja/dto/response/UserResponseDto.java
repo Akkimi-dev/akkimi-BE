@@ -7,6 +7,7 @@ import lombok.Getter;
 @Getter
 @Builder
 public class UserResponseDto  {
+    private Long userId;
     private String socialId;
     private String nickname;
     private String role;
@@ -14,6 +15,7 @@ public class UserResponseDto  {
 
     public static UserResponseDto from(User user) {
         return UserResponseDto.builder()
+                .userId(user.getUserId())
                 .socialId(user.getSocialId())
                 .nickname(user.getNickname())
                 .role(user.getRole().name())
