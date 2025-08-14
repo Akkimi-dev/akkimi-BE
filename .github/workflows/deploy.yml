@@ -1,0 +1,93 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: ["main"]
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build (skip tests)
+        run: ./gradlew clean build -x test
+
+      - name: Pick latest JAR and rename
+        run: |
+          set -e
+          JAR=$(ls -t build/libs/*.jar | head -n1)
+          echo "Found JAR: $JAR"
+          cp "$JAR" aja-0.0.1-SNAPSHOT.jar
+
+      - name: Add EC2 host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Setup SSH key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Create and upload .env
+        run: |
+          # 따옴표 없는 EOF로 GitHub Secrets 값을 실제로 주입합니다.
+          cat > .env <<EOF
+          DB_URL=${{ secrets.ENV_DB_URL }}
+          DB_USERNAME=${{ secrets.ENV_DB_USERNAME }}
+          DB_PASSWORD=${{ secrets.ENV_DB_PASSWORD }}
+          JWT_SECRET=${{ secrets.ENV_JWT_SECRET }}
+          JWT_ACCESS_TOKEN_EXPIRATION=${{ secrets.ENV_JWT_ACCESS_EXPIRATION }}
+          JWT_REFRESH_TOKEN_EXPIRATION=${{ secrets.ENV_JWT_REFRESH_EXPIRATION }}
+          KAKAO_CLIENT_ID=${{ secrets.ENV_KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET=${{ secrets.ENV_KAKAO_CLIENT_SECRET }}
+          KAKAO_REDIRECT_URI=${{ secrets.ENV_KAKAO_REDIRECT_URI }}
+          EOF
+
+          scp -i ~/.ssh/id_rsa .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/.env.new
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv /home/ubuntu/.env.new /home/ubuntu/.env && sudo chown ubuntu:ubuntu /home/ubuntu/.env && sudo chmod 600 /home/ubuntu/.env"
+
+      - name: Upload JAR (atomic)
+        run: |
+          scp -i ~/.ssh/id_rsa aja-0.0.1-SNAPSHOT.jar ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/aja-0.0.1-SNAPSHOT.jar.new
+
+      - name: Switch & restart service
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} '
+            set -e
+            # 백업 후 교체 (롤백 대비)
+            if [ -f /home/ubuntu/aja-0.0.1-SNAPSHOT.jar ]; then
+              mv /home/ubuntu/aja-0.0.1-SNAPSHOT.jar /home/ubuntu/aja-0.0.1-SNAPSHOT.jar.bak.$(date +%Y%m%d%H%M%S)
+            fi
+            mv /home/ubuntu/aja-0.0.1-SNAPSHOT.jar.new /home/ubuntu/aja-0.0.1-SNAPSHOT.jar
+
+            sudo systemctl daemon-reload
+            sudo systemctl restart aja.service
+            sudo systemctl is-active aja.service
+          '
+      - name: Health check
+        run: |
+          curl -fsS http://${{ secrets.EC2_HOST }}:8080/actuator/health
