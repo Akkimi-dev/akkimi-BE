@@ -84,7 +84,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/kakao", //카카오 로그인
                                 "/api/v1/auth/refresh", //토큰 재발급
                                 "/h2-console/**",      // H2 데이터베이스 콘솔
-                                "/favicon.ico"
+                                "/favicon.ico",
+                                "/actuator/health" //hc
                         ).permitAll()
 
                         .anyRequest().authenticated()
