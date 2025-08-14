@@ -40,6 +40,9 @@ test_api.sh
 
 # Package Files
 *.jar
+
+# Gradle Wrapper JAR는 예외로 추적
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
