@@ -26,8 +26,7 @@ public class ChatMessage extends BaseTimeEntity {
     @Column(nullable = false, length = 20)
     private Speaker speaker;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "LONGTEXT")
     private String message;
 
     @Column(name = "is_feedback", nullable = false)

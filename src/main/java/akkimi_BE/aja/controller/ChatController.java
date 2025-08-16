@@ -15,8 +15,8 @@ public class ChatController {
     private final UserRepository userRepository;
 
     @PostMapping
-    public String chat(@RequestBody String message, @PathVariable Long userId) {//@AuthenticationPrincipal User user
+    public void chat(@RequestBody String message, @PathVariable Long userId) {//@AuthenticationPrincipal User user
         User user = userRepository.findById(userId).orElse(null);
-        return chatService.talk(user, message);
+        chatService.talk(user, message);
     }
 }
