@@ -1,12 +1,11 @@
 package akkimi_BE.aja.service;
 
 import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
+import akkimi_BE.aja.dto.response.ChatResponseDto;
 import akkimi_BE.aja.entity.ChatMessage;
 import akkimi_BE.aja.entity.Speaker;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.ChatMessageRepository;
-import global.exception.CustomException;
-import global.exception.HttpErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
@@ -18,7 +17,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -31,7 +29,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
 
     @Transactional
-    public String talk(User user, String userMessage) {
+    public ChatResponseDto talk(User user, String userMessage) {
 
         Long maltuId = user.getCurrentMaltuId();
 
@@ -39,10 +37,10 @@ public class ChatService {
         String systemPrompt = maltuService.resolveTonePrompt(user);
 
         //유저 메시지 저장
-        chatMessageRepository.save(ChatMessage.of(user, maltuId, Speaker.USER, userMessage, false));
+        ChatMessage savedUser = chatMessageRepository.save(ChatMessage.of(user, maltuId, Speaker.USER, userMessage, false));
 
         String assistantReply;
-        // 3) 모델 호출 (자유 대화이므로 0.7 권장)
+        // 모델 호출 (자유 대화이므로 0.7 권장)
         try {
             assistantReply = chatClient
                     .prompt()
@@ -57,11 +55,25 @@ public class ChatService {
                     "잠시 후 다시 시도해 주세요 🙏";
         }
         // 4) 모델 응답 저장
-        chatMessageRepository.save(ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, false));
+        ChatMessage savedBot = chatMessageRepository.save(ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, false));
 
-        // 5) 최종 응답 반환
-        return assistantReply;
+        // 5) 응답 DTO
+        return ChatResponseDto.builder()
+                .userMessage(ChatResponseDto.MessageDto.builder()
+                        .messageId(savedUser.getChatId())
+                        .role(savedUser.getSpeaker().name())
+                        .text(savedUser.getMessage())
+                        .createdAt(savedUser.getCreatedAt().toString())
+                        .build())
+                .botMessage(ChatResponseDto.MessageDto.builder()
+                        .messageId(savedBot.getChatId())
+                        .role(savedBot.getSpeaker().name())
+                        .text(savedBot.getMessage())
+                        .createdAt(savedBot.getCreatedAt().toString())
+                        .build())
+                .build();
     }
+
 
     @Transactional(readOnly = true)
     public ChatHistoryResponseDto getMessages(User user, Integer limit, Long beforeId) {
@@ -114,5 +126,7 @@ public class ChatService {
                 .hasMore(hasMore)
                 .nextBeforeId(nextBeforeId)
                 .build();
+
     }
 }
+
