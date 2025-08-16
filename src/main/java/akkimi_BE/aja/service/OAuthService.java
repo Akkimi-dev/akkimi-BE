@@ -158,25 +158,25 @@ public class OAuthService {
 
         // 1) RT 유효성 검증 (서명/만료)
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new CustomException(HttpErrorCode.UNAUTHORIZED); // 적절한 에러코드로 치환
+            throw new CustomException(HttpErrorCode.UNAUTHORIZED, "현재 목표가 존재하지 않습니다."); // 적절한 에러코드로 치환
         }
         if (!jwtUtil.validateRefreshToken(refreshToken)) {
-            throw new CustomException(HttpErrorCode.UNAUTHORIZED);
+            throw new CustomException(HttpErrorCode.UNAUTHORIZED, "현재 목표가 존재하지 않습니다.");
         }
 
         // 2) 서버 저장소에서 RT가 활성 상태인지 확인(탈취/로그아웃/블랙리스트 방지)
         var stored = refreshTokenService.find(refreshToken)
-                .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED, "현재 목표가 존재하지 않습니다."));
 
         if (stored.isExpired(LocalDateTime.now())) {
             refreshTokenService.revoke(refreshToken);
-            throw new CustomException(HttpErrorCode.UNAUTHORIZED);
+            throw new CustomException(HttpErrorCode.UNAUTHORIZED, "현재 목표가 존재하지 않습니다.");
         }
 
         // 3) 토큰 재발급
         String socialId = jwtUtil.getSocialIdFromRefresh(refreshToken);
         User user = userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new CustomException(HttpErrorCode.SOCIALID_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(HttpErrorCode.SOCIALID_NOT_FOUND, "현재 목표가 존재하지 않습니다."));
 
         String newAccess = jwtUtil.issueAccessToken(user);
 
@@ -201,10 +201,10 @@ public class OAuthService {
     // Access Token은 stateless 특성상 즉시 무효화 불가(만료 대기)
     public boolean logout(Authentication auth, String refreshToken) {
         if (auth == null || !auth.isAuthenticated()) {
-            throw new CustomException(HttpErrorCode.UNAUTHORIZED);
+            throw new CustomException(HttpErrorCode.UNAUTHORIZED, "현재 목표가 존재하지 않습니다.");
         }
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new CustomException(HttpErrorCode.REFRESH_TOKEN_NULL);
+            throw new CustomException(HttpErrorCode.REFRESH_TOKEN_NULL, "현재 목표가 존재하지 않습니다.");
         }
 
         // 만료/서명오류여도 멱등 응답을 위해 true 반환 가능

@@ -62,4 +62,11 @@ public class SavingGoal extends BaseTimeEntity {
         return "D+" + Math.abs(d);
     }
 
+    public void updatePartial(Integer purposeBudget, String purpose, LocalDate startDate, LocalDate endDate) {
+        if (purposeBudget != null )this.purposeBudget = purposeBudget;
+        if (purpose != null) this.purpose = purpose;
+        if (startDate != null) this.startDate = startDate;
+        if (endDate != null) this.endDate = endDate;
+    }
+
 }

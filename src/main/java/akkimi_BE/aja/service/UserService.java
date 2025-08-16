@@ -33,6 +33,6 @@ public class UserService {
 
     public User findBySocialId(String socialId) {
         return userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new CustomException(HttpErrorCode.SOCIALID_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(HttpErrorCode.SOCIALID_NOT_FOUND, "현재 목표가 존재하지 않습니다."));
     }
 }
