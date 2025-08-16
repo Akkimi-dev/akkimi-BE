@@ -1,18 +1,30 @@
 package akkimi_BE.aja.service;
 
+import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
 import akkimi_BE.aja.entity.ChatMessage;
 import akkimi_BE.aja.entity.Speaker;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.ChatMessageRepository;
-import io.jsonwebtoken.lang.Maps;
+import global.exception.CustomException;
+import global.exception.HttpErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ChatService {
     private final ChatClient chatClient;
     private final MaltuService maltuService;
@@ -49,5 +61,58 @@ public class ChatService {
 
         // 5) 최종 응답 반환
         return assistantReply;
+    }
+
+    @Transactional(readOnly = true)
+    public ChatHistoryResponseDto getMessages(User user, Integer limit, Long beforeId) {
+        int size = Math.max(1, Math.min(limit == null ? 30 : limit, 100));
+
+        List<ChatMessage> desc = chatMessageRepository.findSlice(
+                user.getUserId(), beforeId, PageRequest.of(0, size + 1));
+
+        boolean hasMore = desc.size() > size;
+        if (hasMore) desc = desc.subList(0, size);
+
+        // 날짜 라벨링
+        DateTimeFormatter dateHeaderFmt = DateTimeFormatter.ofPattern("yyyy. M월 d일 a h:mm", Locale.KOREA);
+        DateTimeFormatter timeHeaderFmt = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREA);
+
+        List<ChatHistoryResponseDto.MessageDto> items = new ArrayList<>(desc.size());
+        ChatMessage prev = null;
+
+        for (ChatMessage cur : desc) {
+            LocalDateTime nowTs = cur.getCreatedAt();
+            boolean showDate = (prev == null) ||
+                    !prev.getCreatedAt().toLocalDate().equals(nowTs.toLocalDate());
+
+            boolean showTime = false;
+            if (!showDate) {
+                long gapMin = Duration.between(prev.getCreatedAt(), nowTs).toMinutes();
+                showTime = gapMin >= 60; // 60분 이상만 시간 헤더
+            }
+
+            items.add(ChatHistoryResponseDto.MessageDto.builder()
+                    .chatId(cur.getChatId())
+                    .speaker(cur.getSpeaker().name())
+                    .message(cur.getMessage())
+                    .createdAt(nowTs.toString())
+                    // 날짜 바뀌면 날짜+시간 라벨 하나만
+                    .showDate(showDate)
+                    .dateLabel(showDate ? nowTs.format(dateHeaderFmt) : null)
+                    // 60분 이상 간격이면 시간만
+                    .showTime(!showDate && showTime)
+                    .timeLabel((!showDate && showTime) ? nowTs.format(timeHeaderFmt) : null)
+                    .build());
+
+            prev = cur;
+        }
+
+        Long nextBeforeId = hasMore ? desc.get(0).getChatId() : null;
+
+        return ChatHistoryResponseDto.builder()
+                .messages(items)
+                .hasMore(hasMore)
+                .nextBeforeId(nextBeforeId)
+                .build();
     }
 }

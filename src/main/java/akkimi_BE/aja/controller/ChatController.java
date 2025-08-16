@@ -1,7 +1,7 @@
 package akkimi_BE.aja.controller;
 
+import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
 import akkimi_BE.aja.entity.User;
-import akkimi_BE.aja.repository.UserRepository;
 import akkimi_BE.aja.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,11 +12,16 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class ChatController {
     private final ChatService chatService;
-    private final UserRepository userRepository;
 
     @PostMapping
-    public void chat(@RequestBody String message, @PathVariable Long userId) {//@AuthenticationPrincipal User user
-        User user = userRepository.findById(userId).orElse(null);
+    public void chat(@AuthenticationPrincipal User user, @RequestBody String message) {
         chatService.talk(user, message);
+    }
+
+    @GetMapping("/messages")
+    public ChatHistoryResponseDto getMessages(@AuthenticationPrincipal User user,
+                                              @RequestParam(name = "limit", required = false) Integer limit,
+                                              @RequestParam(name = "beforeId", required = false) Long beforeId) {
+        return chatService.getMessages(user, limit, beforeId);
     }
 }
