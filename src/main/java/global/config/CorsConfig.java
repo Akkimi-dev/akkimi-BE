@@ -1,4 +1,4 @@
-package akkimi_BE.aja.config;
+package global.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

@@ -1,4 +1,4 @@
-package akkimi_BE.aja.service;
+package akkimi_BE.aja.service.auth;
 
 import akkimi_BE.aja.entity.RefreshToken;
 import akkimi_BE.aja.entity.User;
