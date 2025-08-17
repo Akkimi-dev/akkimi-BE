@@ -9,6 +9,8 @@ import akkimi_BE.aja.dto.response.UserResponseDto;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.service.OAuthService;
 import akkimi_BE.aja.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -26,6 +28,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/kakao")
+    @Operation(security = @SecurityRequirement(name = "")) //swagger 인증 불필요한 예외 처리
     public TokenResponse kakaoLogin(@RequestBody KakaoLoginRequest request) {
         log.info("카카오 로그인 요청 - 인가 코드: {}",
                 request.getCode().substring(0, Math.min(request.getCode().length(), 10)) + "...");
@@ -57,6 +60,7 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
+    @Operation(security = @SecurityRequirement(name = "")) //swagger 인증 불필요한 예외 처리
     public TokenResponse refresh(@RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
         return oAuthService.refresh(refreshTokenRequestDto.getRefreshToken());
     }
@@ -67,6 +71,7 @@ public class AuthController {
     }
     
     @GetMapping("/callback")
+    @Operation(security = @SecurityRequirement(name = ""))
     public String kakaoCallback() {
         // 정적 HTML 파일로 리다이렉트
         return "redirect:/callback.html";

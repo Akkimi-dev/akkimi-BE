@@ -7,7 +7,7 @@ import org.springframework.http.server.*;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "akkimi_BE.aja.controller")
 public class CommonResponseAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
