@@ -52,6 +52,14 @@ public class UserService {
     }
 
     @Transactional
+    public void updateNickname(User authUser, String nickname) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        user.updateNickname(nickname);
+    }
+
+    @Transactional
     public void updateRegion(User authUser, String region) {
         User user = userRepository.findById(authUser.getUserId())
                 .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
@@ -91,4 +99,5 @@ public class UserService {
 
         return CurrentMaltuResponseDto.from(maltu);
     }
+
 }
