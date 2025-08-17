@@ -67,7 +67,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 if(user.isPresent()) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    socialId,  // principal을 socialId로 설정
+                                    user.get(),  // principal을 User 객체로 설정
                                     null,
                                     user.get().getAuthorities());
 

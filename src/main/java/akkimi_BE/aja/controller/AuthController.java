@@ -42,7 +42,7 @@ public class AuthController {
 
     @GetMapping("/me")
     public UserResponseDto getCurrentUserInfo(Authentication authentication) {
-        User user = userService.findBySocialId(authentication.getName()); // authentication.getName()은 JwtFilter에서 설정한 socialId
+        User user = (User) authentication.getPrincipal(); // principal이 이제 User 객체이므로 직접 가져옴
         return UserResponseDto.from(user);
     }
 
@@ -50,7 +50,7 @@ public class AuthController {
     public TokenValidationResponseDto validateToken(Authentication authentication) {
         return TokenValidationResponseDto.builder()
                 .valid(true)
-                .userSocialId(authentication.getName())
+                .userSocialId(authentication.getName()) //getName이 socialId
                 .authorities(authentication.getAuthorities())
                 .authenticated(authentication.isAuthenticated())
                 .build();

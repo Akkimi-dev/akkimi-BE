@@ -157,11 +157,11 @@ public class UserService {
     }
 
     public Boolean validatePhone(PhoneValidateRequestDto phoneValidateRequestDto) {
-        return userRepository.existsByPhoneNumber(phoneValidateRequestDto.getPhoneNumber());
+        return !userRepository.existsByPhoneNumber(phoneValidateRequestDto.getPhoneNumber());
     }
 
     public Boolean validateEmail(EmailValidateRequestDto emailValidateRequestDto) {
-        return userRepository.existsByEmail(emailValidateRequestDto.getEmail());
+        return !userRepository.existsByEmail(emailValidateRequestDto.getEmail());
     }
 
     private TokenResponse issueTokens(User user) {
@@ -181,6 +181,9 @@ public class UserService {
                 .user(TokenResponse.UserInfo.builder()
                         .userId(user.getUserId())
                         .socialId(user.getSocialId())
+                        .nickname(user.getNickname())
+                        .email(user.getEmail())
+                        .phoneNumber(user.getPhoneNumber())
                         .role(user.getRole().name())
                         .socialType(user.getSocialType().name())
                         .build())

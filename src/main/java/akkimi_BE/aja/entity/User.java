@@ -63,12 +63,12 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return "";
+        return passwordHash != null ? passwordHash : "";
     }
 
     @Override
     public String getUsername() {
-        return "";
+        return socialId;
     }
 
     public void updateNickname(String nickname) {
