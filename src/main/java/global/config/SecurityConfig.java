@@ -8,6 +8,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -83,6 +85,9 @@ public class SecurityConfig {
                                 "/",                    // 메인 페이지
                                 "/api/v1/auth/kakao", //카카오 로그인
                                 "/api/v1/auth/refresh", //토큰 재발급
+                                "/api/v1/auth/signup/**", // 회원가입
+                                "/api/v1/auth/login/**", // 로그인
+                                "/api/v1/auth/validate/**", // 중복 확인
                                 "/h2-console/**",      // H2 데이터베이스 콘솔
                                 "/favicon.ico",
 
@@ -139,6 +144,11 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
 

@@ -38,25 +38,17 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     private SocialType socialType;
 
-    @Column(name = "social_id", length = 100)
+    @Column(name = "social_id", length = 100, unique = true)
     private String socialId; // 소셜 전용, 로컬은 NULL
 
-    @Column(length = 100)
+    @Column(length = 100, unique = true)
     private String email;
 
     @Column(length = 100)
     private String passwordHash; // 로컬 전용
 
-    /*
-    private Boolean emailVerified;
-    private LocalDate emailVerifiedAt;
-     */
-
-    @Column(name = "phone_number")
+    @Column(name = "phone_number", unique = true)
     private String phoneNumber;
-
-    @Column(name = "profile_image")
-    private String profileImage;
 
     @Column(name = "nickname", length = 50)
     private String nickname;
@@ -71,15 +63,23 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     @Override
     public String getPassword() {
-        return "";
+        return passwordHash != null ? passwordHash : "";
     }
 
     @Override
     public String getUsername() {
-        return "";
+        return socialId;
     }
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+    }
+
+    public void changeCurrentMaltu(Long maltuId) {
+        this.currentMaltuId = maltuId;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
     }
 }
