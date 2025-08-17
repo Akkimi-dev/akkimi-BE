@@ -28,6 +28,7 @@ public class ChatService {
     private final MaltuService maltuService;
     private final ChatMessageRepository chatMessageRepository;
 
+    //피드백 아닌 일반 대화
     @Transactional
     public ChatResponseDto talk(User user, String userMessage) {
 

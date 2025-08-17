@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 public class MaltuService {
     private final MaltuRepository maltuRepository;
 
+    /*
+    말투 설정 프롬프트
+    */
     public String resolveTonePrompt(User user) {
         Long maltuId = user.getCurrentMaltuId(); //null이면 에러처리
         String prompt = "";

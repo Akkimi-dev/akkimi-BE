@@ -8,7 +8,7 @@ import java.util.List;
 @Getter
 @Builder
 public class ChatHistoryResponseDto {
-    private List<MessageDto> messages;   // 시간 오름차순
+    private List<MessageDto> messages;
     private boolean hasMore;       // 더 불러올 게 있는가
     private Long nextBeforeId;     // 다음 요청 시 beforeId로 사용
 

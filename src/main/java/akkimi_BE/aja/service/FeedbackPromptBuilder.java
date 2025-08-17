@@ -6,12 +6,12 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 /*
-일일 소비 생성 후
-챗봇에게 보낼 메시지로 변환하는 프롬프트
+ 일일 소비 생성 후
+ 챗봇에게 보낼 메시지로 변환하는 프롬프트
  */
 @Component
 public class FeedbackPromptBuilder {
-    //TODO 정후 : 일일소비생성 dto 생성해서 그 이름으로 변경하고 프롬프트 수정하기
+    //TODO 정후 : 일일소비생성 dto로 받아와 프롬프트 수정하기. 아래는 예시
 //    public String buildUserMessage(DailyConsumptionCreateRequestDto req) {
 //        var nf = NumberFormat.getInstance(Locale.KOREA);
 //
