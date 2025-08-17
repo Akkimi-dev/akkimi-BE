@@ -31,12 +31,6 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
 
-
-    public User findBySocialId(String socialId) {
-        return userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new CustomException(HttpErrorCode.SOCIALID_NOT_FOUND));
-    }
-
     //프로필 조회
     public UserProfileResponseDto getUserProfile(User authUser) {
         // 인증 주체의 id 기반으로 최신 상태를 DB에서 다시 조회(조인 페치)
@@ -106,7 +100,7 @@ public class UserService {
                 .email(emailRequestDto.getEmail())
                 .passwordHash(passwordEncoder.encode(emailRequestDto.getPassword()))
                 .socialId("LOCAL_EMAIL:" + emailRequestDto.getEmail()) //토큰 발급을 위해
-                .socialType(SocialType.LOCAL_EMAIL) // 로컬 가입표시
+                .socialType(SocialType.EMAIL) // 로컬 가입표시
                 .role(Role.USER)
                 .build();
 
@@ -124,33 +118,35 @@ public class UserService {
                 .phoneNumber(phoneRequestDto.getPhoneNumber())
                 .passwordHash(passwordEncoder.encode(phoneRequestDto.getPassword()))
                 .socialId("LOCAL_PHONE:" + phoneRequestDto.getPhoneNumber()) //토큰 발급을 위해
-                .socialType(SocialType.LOCAL_PHONE) // 로컬 가입표시
+                .socialType(SocialType.PHONE) // 로컬 가입표시
                 .role(Role.USER)
                 .build();
 
         return userRepository.save(user).getUserId();
     }
 
+    @Transactional
     public TokenResponse loginWithEmail(EmailRequestDto emailLoginRequestDto) {
 
         User user = userRepository.findByEmail(emailLoginRequestDto.getEmail())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.LOGIN_BAD_CREDENTIALS));
+                .orElseThrow(() -> new CustomException(HttpErrorCode.LOGIN_BAD_EMAIL));
 
         if (user.getPasswordHash() == null ||
                 !passwordEncoder.matches(emailLoginRequestDto.getPassword(), user.getPasswordHash())) {
-            throw new CustomException(HttpErrorCode.LOGIN_BAD_CREDENTIALS);
+            throw new CustomException(HttpErrorCode.LOGIN_BAD_PASSWORD);
         }
 
         return issueTokens(user);
     }
 
+    @Transactional
     public TokenResponse loginWithPhone(PhoneRequestDto phoneLoginRequestDto) {
         User user = userRepository.findByPhoneNumber(phoneLoginRequestDto.getPhoneNumber())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.LOGIN_BAD_CREDENTIALS));
+                .orElseThrow(() -> new CustomException(HttpErrorCode.LOGIN_BAD_PHONE));
 
         if (user.getPasswordHash() == null ||
                 !passwordEncoder.matches(phoneLoginRequestDto.getPassword(), user.getPasswordHash())) {
-            throw new CustomException(HttpErrorCode.LOGIN_BAD_CREDENTIALS);
+            throw new CustomException(HttpErrorCode.LOGIN_BAD_PASSWORD);
         }
 
         return issueTokens(user);
@@ -164,7 +160,9 @@ public class UserService {
         return !userRepository.existsByEmail(emailValidateRequestDto.getEmail());
     }
 
-    private TokenResponse issueTokens(User user) {
+
+    @Transactional
+    protected TokenResponse issueTokens(User user) {
         String accessToken = jwtUtil.generateAccessToken(user.getSocialId());
         String refreshToken = jwtUtil.generateRefreshToken(user.getSocialId());
         log.info("JWT 토큰 생성 완료");
