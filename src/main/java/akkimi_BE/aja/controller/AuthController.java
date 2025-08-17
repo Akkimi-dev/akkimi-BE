@@ -2,8 +2,7 @@ package akkimi_BE.aja.controller;
 
 
 import akkimi_BE.aja.dto.oauth.KakaoLoginRequest;
-import akkimi_BE.aja.dto.request.LogoutRequestDto;
-import akkimi_BE.aja.dto.request.RefreshTokenRequestDto;
+import akkimi_BE.aja.dto.request.*;
 import akkimi_BE.aja.dto.response.TokenResponse;
 import akkimi_BE.aja.dto.response.TokenValidationResponseDto;
 import akkimi_BE.aja.dto.response.UserResponseDto;
@@ -14,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -70,4 +71,42 @@ public class AuthController {
         // 정적 HTML 파일로 리다이렉트
         return "redirect:/callback.html";
     }
+
+
+    /* 회원가입 */
+    @PostMapping("/signup/email")
+    public Long signupWithEmail(@RequestBody EmailRequestDto emailRequestDto) {
+        return userService.signupWithEmail(emailRequestDto);
+    }
+
+    @PostMapping("/signup/phone")
+    public Long signupWithPhone(@RequestBody PhoneRequestDto phoneSignupRequestDto) {
+        return userService.signupWithPhone(phoneSignupRequestDto);
+    }
+
+    /* 로그인 */
+    @PostMapping("/login/email")
+    public TokenResponse loginWithEmail(@RequestBody EmailRequestDto emailLoginRequestDto) {
+        return userService.loginWithEmail(emailLoginRequestDto);
+    }
+
+    @PostMapping("/login/phone")
+    public TokenResponse loginWithPhone(@RequestBody PhoneRequestDto phoneLoginRequestDto) {
+        return userService.loginWithPhone(phoneLoginRequestDto);
+    }
+
+    /* 중복 확인 */
+    @PostMapping("/validate/phone")
+    public Map<String, Boolean> validatePhone(@RequestBody PhoneValidateRequestDto phoneValidateRequestDto) {
+        Boolean result = userService.validatePhone(phoneValidateRequestDto);
+        return Map.of("available", result);
+    }
+
+    @PostMapping("/validate/email")
+    public Map<String, Boolean> validateEmail(@RequestBody EmailValidateRequestDto emailValidateRequestDto) {
+        Boolean result = userService.validateEmail(emailValidateRequestDto);
+        return Map.of("available", result);
+
+    }
+
 }
