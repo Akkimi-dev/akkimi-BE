@@ -85,7 +85,15 @@ public class SecurityConfig {
                                 "/api/v1/auth/refresh", //토큰 재발급
                                 "/h2-console/**",      // H2 데이터베이스 콘솔
                                 "/favicon.ico",
+
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**",
+
                                 "/actuator/health" //hc
+
                         ).permitAll()
 
                         .anyRequest().authenticated()
