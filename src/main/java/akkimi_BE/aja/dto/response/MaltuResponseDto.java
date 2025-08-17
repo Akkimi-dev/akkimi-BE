@@ -13,6 +13,7 @@ import lombok.NoArgsConstructor;
 public class MaltuResponseDto {
     private Long maltuId;
     private Long creatorId;
+    private String creatorName;
     private String maltuName;
     private Boolean isPublic;
     private String prompt;
@@ -21,6 +22,7 @@ public class MaltuResponseDto {
         return MaltuResponseDto.builder()
                 .maltuId(maltu.getMaltuId())
                 .creatorId(maltu.getCreator().getUserId())
+                .creatorName(maltu.getCreator().getNickname())
                 .maltuName(maltu.getMaltuName())
                 .isPublic(maltu.getIsPublic())
                 .prompt(maltu.getPrompt())

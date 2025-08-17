@@ -3,10 +3,13 @@ package akkimi_BE.aja.controller;
 import akkimi_BE.aja.dto.request.CreateMaltuRequestDto;
 import akkimi_BE.aja.dto.response.MaltuResponseDto;
 import akkimi_BE.aja.entity.User;
+import akkimi_BE.aja.repository.UserRepository;
 import akkimi_BE.aja.service.MaltuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -22,5 +25,15 @@ public class MaltuController {
     @GetMapping("/{maltuId}")
     public MaltuResponseDto getMaltu(@AuthenticationPrincipal User user, @PathVariable Long maltuId) {
         return maltuService.getMaltu(user, maltuId);
+    }
+
+    @GetMapping("/public/list")
+    public List<MaltuResponseDto> getPublicMaltus(@AuthenticationPrincipal User user) {
+        return maltuService.getPublicMaltus(user);
+    }
+
+    @GetMapping("/mine/list")
+    public List<MaltuResponseDto> getMyMaltus(@AuthenticationPrincipal User user) {
+        return maltuService.getMyMaltus(user);
     }
 }

@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -45,5 +47,27 @@ public class MaltuService {
                 .orElseThrow(() -> new CustomException(HttpErrorCode.MALTU_NOT_FOUND));
 
         return MaltuResponseDto.from(maltu);
+    }
+
+    public List<MaltuResponseDto> getPublicMaltus(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        return maltuRepository
+                .findByIsPublicTrueOrderByCreatedAtDesc()
+                .stream()
+                .map(MaltuResponseDto::from)
+                .toList();
+    }
+
+    public List<MaltuResponseDto> getMyMaltus(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        return maltuRepository
+                .findByCreatorOrderByCreatedAtDesc(user)
+                .stream()
+                .map(MaltuResponseDto::from)
+                .toList();
     }
 }

@@ -29,4 +29,11 @@ public class Maltu extends BaseTimeEntity {
     //말투 프롬프트 텍스트
     @Lob
     private String prompt;
+
+    public void updateMaltu(String maltuName, String prompt){
+        this.maltuName = maltuName;
+        this.prompt = prompt;
+    }
 }
+
+
