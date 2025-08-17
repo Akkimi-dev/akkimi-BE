@@ -1,4 +1,4 @@
-package akkimi_BE.aja.service;
+package akkimi_BE.aja.service.auth;
 
 import akkimi_BE.aja.dto.oauth.KakaoTokenResponse;
 import akkimi_BE.aja.dto.oauth.KakaoUserInfo;

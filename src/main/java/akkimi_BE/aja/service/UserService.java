@@ -10,6 +10,7 @@ import akkimi_BE.aja.entity.SocialType;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.MaltuRepository;
 import akkimi_BE.aja.repository.UserRepository;
+import akkimi_BE.aja.service.auth.RefreshTokenService;
 import global.exception.CustomException;
 import global.exception.HttpErrorCode;
 import global.util.JwtUtil;
