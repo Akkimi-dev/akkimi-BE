@@ -14,7 +14,9 @@ public enum HttpErrorCode implements ErrorCode {
     REFRESH_TOKEN_NULL("Refresh Token의 값이 없습니다.",HttpStatus.BAD_REQUEST),
 
     // 로그인/회원가입
-    LOGIN_BAD_CREDENTIALS("아이디(전화번호/이메일) 또는 비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED),
+    LOGIN_BAD_PHONE("전화번호가 올바르지 않습니다.", HttpStatus.NOT_FOUND), //404
+    LOGIN_BAD_EMAIL("이메일이 올바르지 않습니다.", HttpStatus.NOT_FOUND), //404
+    LOGIN_BAD_PASSWORD("비밀번호가 올바르지 않습니다.", HttpStatus.UNAUTHORIZED), //401
     LOGIN_SOCIAL_TYPE_MISMATCH("로컬 계정이 아닙니다.", HttpStatus.UNAUTHORIZED),
     VALIDATE_EXISTED_EMAIL("이미 사용 중인 이메일입니다.", HttpStatus.CONFLICT),
     VALIDATE_EXISTED_PHONE("이미 사용 중인 전화번호입니다.", HttpStatus.CONFLICT),
@@ -26,7 +28,7 @@ public enum HttpErrorCode implements ErrorCode {
     MALTU_NOT_FOUND("해당 말투를 찾을 수 없습니다.",HttpStatus.NOT_FOUND),
     MALTU_NOT_PUBLIC("해당 말투는 현재 공유되어 있지 않습니다.",HttpStatus.BAD_REQUEST),
     USER_MALTU_NOT_SETTED("유저에 말투가 설정되어 있지 않습니다.",HttpStatus.NOT_FOUND),
-    FORBIDDEN_MALTU_ACCESS("말투 생성자와 로그인된 생성자와 맞지 않습니다.", HttpStatus.FORBIDDEN),;
+    FORBIDDEN_MALTU_ACCESS("말투 생성자와 로그인된 생성자와 맞지 않습니다.", HttpStatus.FORBIDDEN);
 
 
     private final String errorMessage; // 에러 메시지
