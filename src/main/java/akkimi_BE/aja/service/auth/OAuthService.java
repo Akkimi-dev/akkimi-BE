@@ -58,9 +58,9 @@ public class OAuthService {
         Map<String, Object> userInfo = getKakaoUserInfo(kakaoToken.getAccessToken());
         KakaoUserInfo kakaoUserInfo = new KakaoUserInfo(userInfo);
 
-        // 3. 사용자 저장 또는 업데이트
-        User user = saveOrUpdate(kakaoUserInfo);
-        log.info("사용자 정보 저장/업데이트 완료: {}", user.getNickname());
+        // 3. 사용자 저장
+        User user = save(kakaoUserInfo);
+        log.info("사용자 정보 저장 완료: {}", user.getNickname());
 
         // 4. JWT 토큰 생성
         String accessToken = jwtUtil.generateAccessToken(user.getSocialId());
@@ -135,22 +135,18 @@ public class OAuthService {
         }
     }
 
-    private User saveOrUpdate(KakaoUserInfo kakaoUserInfo) {
+    private User save(KakaoUserInfo kakaoUserInfo) {
         String socialId = kakaoUserInfo.getId();
 
-        Optional<User> existingUser = userRepository.findBySocialId(socialId);
-
-        if (existingUser.isPresent()) {
-            User user = existingUser.get();
-            return userRepository.save(user);
-        } else {
-            User newUser = User.builder()
-                    .socialId(socialId)
-                    .socialType(SocialType.KAKAO)
-                    .role(Role.USER)
-                    .build();
-            return userRepository.save(newUser);
-        }
+        return userRepository.findBySocialId(socialId)
+                .orElseGet(() -> {
+                    User newUser = User.builder()
+                            .socialId(socialId)
+                            .socialType(SocialType.KAKAO)
+                            .role(Role.USER)
+                            .build();
+                    return userRepository.save(newUser);
+                });
     }
 
     // 토큰 재발급: RT 검증/저장 확인 → Access만 새발급 (RT는 유지)

@@ -27,6 +27,8 @@ public class TokenResponse {
         private Long userId;
         private String socialId;
         private String nickname;
+        private String email;
+        private String phoneNumber;
         private String role;
         private String socialType;
     }

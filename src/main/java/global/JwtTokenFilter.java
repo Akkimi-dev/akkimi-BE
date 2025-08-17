@@ -46,11 +46,21 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         System.out.println("Authorization Header: " + request.getHeader("Authorization"));
         log.info("필터 통과 요청 URI: {}", requestURI);
 
+        // Swagger 경로는 JWT 인증 필터에서 예외 처리
+        if (requestURI.startsWith("/v3/api-docs")
+                || requestURI.startsWith("/swagger-ui")
+                || requestURI.startsWith("/swagger-resources")
+                || requestURI.startsWith("/webjars")) {
+            log.info("swagger 예외 처리됨 (필터 통과): {}", requestURI);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // OAuth2 콜백 경로는 JWT 인증 필터에서 예외 처리
         if (requestURI.equals("/auth/kakao") ||
                 requestURI.equals("/auth/callback") ||
                 requestURI.startsWith("/api/oauth/")) {
-            log.info("예외 처리됨 (필터 통과): {}", requestURI);
+            log.info("oauth2 콜백 경로 예외 처리됨 (필터 통과): {}", requestURI);
             filterChain.doFilter(request, response);
             return;
         }
@@ -67,7 +77,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 if(user.isPresent()) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    socialId,  // principal을 socialId로 설정
+                                    user.get(),  // principal을 User 객체로 설정
                                     null,
                                     user.get().getAuthorities());
 

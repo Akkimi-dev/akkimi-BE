@@ -23,7 +23,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     @Override
     @Transactional
-    public RefreshToken store(User user, String refreshToken, long ttlSeconds) {
+    public RefreshToken store(User user, String refreshToken, long ttlSeconds) { //멀티 디바이스 로그인 가능
         LocalDateTime expiresAt = LocalDateTime.now().plusSeconds(ttlSeconds);
         RefreshToken rt = RefreshToken.builder()
                 .user(user)

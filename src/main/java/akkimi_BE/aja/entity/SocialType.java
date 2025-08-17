@@ -1,6 +1,7 @@
 package akkimi_BE.aja.entity;
 
 public enum SocialType {
-    LOCAL,
+    EMAIL,
+    PHONE,
     KAKAO
 }
