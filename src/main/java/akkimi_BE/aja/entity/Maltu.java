@@ -34,6 +34,14 @@ public class Maltu extends BaseTimeEntity {
         this.maltuName = maltuName;
         this.prompt = prompt;
     }
+
+    public void setMaltuNameAndPrompt(String maltuName, String prompt) {
+        this.maltuName = maltuName;
+        this.prompt = prompt;
+    }
+    public void setIsPublic(Boolean isPublic) {
+        this.isPublic = isPublic;
+    }
 }
 
 
