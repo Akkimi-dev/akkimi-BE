@@ -91,14 +91,17 @@ public class SecurityConfig {
                                 "/h2-console/**",      // H2 데이터베이스 콘솔
                                 "/favicon.ico",
 
+                                "/api/v1/chat/**", // TODO 테스트로 열어두었습니다.
+
+                                //swagger 설정
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**",
 
-                                "/actuator/health" //hc
-
+                                //hc
+                                "/actuator/health"
                         ).permitAll()
 
                         .anyRequest().authenticated()

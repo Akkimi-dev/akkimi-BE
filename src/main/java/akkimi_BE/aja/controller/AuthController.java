@@ -7,7 +7,7 @@ import akkimi_BE.aja.dto.response.TokenResponse;
 import akkimi_BE.aja.dto.response.TokenValidationResponseDto;
 import akkimi_BE.aja.dto.response.UserResponseDto;
 import akkimi_BE.aja.entity.User;
-import akkimi_BE.aja.service.OAuthService;
+import akkimi_BE.aja.service.auth.OAuthService;
 import akkimi_BE.aja.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
