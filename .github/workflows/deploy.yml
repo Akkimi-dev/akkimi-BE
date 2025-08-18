@@ -68,6 +68,8 @@ jobs:
           
           KAKAO_CLIENT_ID=${{ secrets.ENV_KAKAO_CLIENT_ID }}
           KAKAO_REDIRECT_URI=${{ secrets.ENV_KAKAO_REDIRECT_URI }}
+          
+          OPENAI_API_KEY=${{ secrets.ENV_OPENAI_API_KEY }}
           EOF
 
           scp -i ~/.ssh/id_rsa .env ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/.env.new
