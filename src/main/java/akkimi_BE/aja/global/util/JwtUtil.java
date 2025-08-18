@@ -1,4 +1,4 @@
-package global.util;
+package akkimi_BE.aja.global.util;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;

@@ -1,4 +1,4 @@
-package global.response;
+package akkimi_BE.aja.global.response;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.http.*;

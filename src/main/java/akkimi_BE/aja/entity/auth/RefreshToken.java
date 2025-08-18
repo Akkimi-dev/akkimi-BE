@@ -1,5 +1,6 @@
-package akkimi_BE.aja.entity;
+package akkimi_BE.aja.entity.auth;
 
+import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.entity.common.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
