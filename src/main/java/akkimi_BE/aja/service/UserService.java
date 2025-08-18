@@ -101,7 +101,7 @@ public class UserService {
                 .email(emailRequestDto.getEmail())
                 .passwordHash(passwordEncoder.encode(emailRequestDto.getPassword()))
                 .socialId("LOCAL_EMAIL:" + emailRequestDto.getEmail()) //토큰 발급을 위해
-                .socialType(SocialType.EMAIL) // 로컬 가입표시
+                .socialType(SocialType.LOCAL_EMAIL) // 로컬 가입표시
                 .role(Role.USER)
                 .build();
 
@@ -119,7 +119,7 @@ public class UserService {
                 .phoneNumber(phoneRequestDto.getPhoneNumber())
                 .passwordHash(passwordEncoder.encode(phoneRequestDto.getPassword()))
                 .socialId("LOCAL_PHONE:" + phoneRequestDto.getPhoneNumber()) //토큰 발급을 위해
-                .socialType(SocialType.PHONE) // 로컬 가입표시
+                .socialType(SocialType.LOCAL_PHONE) // 로컬 가입표시
                 .role(Role.USER)
                 .build();
 
