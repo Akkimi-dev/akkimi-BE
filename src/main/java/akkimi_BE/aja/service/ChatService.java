@@ -2,7 +2,6 @@ package akkimi_BE.aja.service;
 
 import akkimi_BE.aja.dto.request.ChatRequestDto;
 import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
-import akkimi_BE.aja.dto.response.ChatResponseDto;
 import akkimi_BE.aja.entity.ChatMessage;
 import akkimi_BE.aja.entity.Speaker;
 import akkimi_BE.aja.entity.User;
@@ -14,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.retry.NonTransientAiException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +21,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -92,9 +91,7 @@ public class ChatService {
                 .hasMore(hasMore)
                 .nextBeforeId(nextBeforeId)
                 .build();
-
     }
-
 
     // 1) 메시지 저장
     @Transactional
@@ -103,13 +100,7 @@ public class ChatService {
 
         //유저 메시지 저장
         Long messageId = chatMessageRepository.save(
-                ChatMessage.of(
-                        user, 
-                        maltuId, 
-                        Speaker.USER, 
-                        chatRequestDto.getMessage(), 
-                        false
-                )
+                ChatMessage.of(user, maltuId, Speaker.USER, chatRequestDto.getMessage(), false)
         ).getChatId();
 
         return messageId;
@@ -125,7 +116,8 @@ public class ChatService {
             throw new CustomException(HttpErrorCode.FORBIDDEN_MESSAGE_ACCESS);
         }
 
-        String systemPrompt = maltuService.resolveTonePrompt(user);
+        //프롬프트
+        String systemPrompt = maltuService.resolveMaltuPrompt(user);
 
         SseEmitter emitter = new SseEmitter(0L);
         emitter.onTimeout(emitter::complete);
@@ -171,11 +163,17 @@ public class ChatService {
                             }
                         })
                         .doOnComplete(() -> {
-                            ChatMessage savedBot = chatMessageRepository.save(
-                                    ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, sb.toString(), false)
-                            );
-                            sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBot.getChatId() + "}");
-                            emitter.complete();
+                            try {
+                                ChatMessage savedBot = chatMessageRepository.save(
+                                        ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, sb.toString(), false)
+                                );
+                                sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBot.getChatId() + "}");
+                                emitter.complete();
+                            } catch (DataAccessException e) { //저장 실패 -> 프론트 무한 대기 x
+                                log.error("Persist failed: {}", e.getMessage(), e);
+                                sendEvent(emitter, "error", "{\"message\":\"persist_failed\"}");
+                                emitter.completeWithError(e);
+                            }
                         })
                         .subscribe();
 
