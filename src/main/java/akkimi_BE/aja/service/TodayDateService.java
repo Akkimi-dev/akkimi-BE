@@ -1,5 +1,6 @@
 package akkimi_BE.aja.service;
 
+import akkimi_BE.aja.entity.SavingGoal;
 import akkimi_BE.aja.entity.TodayDate;
 import akkimi_BE.aja.repository.TodayDateRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +24,8 @@ public class TodayDateService {
     }
 
     @Transactional
-    public TodayDate ensureByDate(LocalDate date) {
-        return todayDateRepository.findByDate(date)
-                .orElseGet(()-> todayDateRepository.save(TodayDate.of(date)));
+    public TodayDate ensureByGoalAndDate(SavingGoal goal, LocalDate date) {
+        return todayDateRepository.findByGoal_GoalIdAndTodayDate(goal.getGoalId(),date)
+                .orElseGet(()-> todayDateRepository.save(TodayDate.of(goal,date)));
     }
 }
