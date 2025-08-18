@@ -31,7 +31,7 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
                             User user = User.builder()
                                     .email("admin@aja.com")
                                     .role(Role.ADMIN)
-                                    .socialType(SocialType.EMAIL)
+                                    .socialType(SocialType.LOCAL_EMAIL)
                                     .nickname("아끼미봇")
                                     .build();
                     return userRepository.save(user);
