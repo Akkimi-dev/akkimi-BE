@@ -69,7 +69,7 @@ public class SavingGoal extends BaseTimeEntity {
         if (endDate != null) this.endDate = endDate;
     }
 
-    public void incrementTotal(int diff) {
+    public void increaseTotal(int diff) {
         if (this.totalSum == null) this.totalSum = 0;
         this.totalSum += diff;
         if(this.totalSum < 0) this.totalSum = 0;

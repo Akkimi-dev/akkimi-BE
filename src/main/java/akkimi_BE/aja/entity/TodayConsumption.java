@@ -31,7 +31,7 @@ public class TodayConsumption {
     @Column(name = "description",length = 255)
     private String description;
 
-    public void change(String category, String itemName, Integer amount, String description) {
+    public void update(String category, String itemName, Integer amount, String description) {
         this.category = category;
         this.itemName = itemName;
         this.amount = amount;
