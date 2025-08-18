@@ -9,6 +9,8 @@ import lombok.Getter;
 public class UserResponseDto  {
     private Long userId;
     private String socialId;
+    private String email;
+    private String phoneNumber;
     private String nickname;
     private String role;
     private String socialType;
@@ -17,6 +19,8 @@ public class UserResponseDto  {
         return UserResponseDto.builder()
                 .userId(user.getUserId())
                 .socialId(user.getSocialId())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
                 .nickname(user.getNickname())
                 .role(user.getRole().name())
                 .socialType(user.getSocialType().name())

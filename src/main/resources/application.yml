@@ -17,6 +17,16 @@ spring:
         hbm2ddl:
           auto: update
         default_batch_fetch_size: 1000
+
+  ai:
+#    retry:
+#      enabled: false           # 실패 즉시 예외 던지도록
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      chat:
+        options:
+          model: gpt-4o-mini
+          temperature: 0.7
 app:
   server-uri: ${SERVER_URI}
 
@@ -45,3 +55,15 @@ logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace  # 바인딩 파라미터까지 보고 싶을 때
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    disable-swagger-default-url: true
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  packages-to-scan: akkimi_BE.aja
