@@ -1,16 +1,16 @@
 package akkimi_BE.aja.service.auth;
 
-import akkimi_BE.aja.dto.oauth.KakaoTokenResponse;
-import akkimi_BE.aja.dto.oauth.KakaoUserInfo;
-import akkimi_BE.aja.dto.response.TokenResponse;
+import akkimi_BE.aja.dto.auth.KakaoTokenResponse;
+import akkimi_BE.aja.dto.auth.KakaoUserInfo;
+import akkimi_BE.aja.dto.auth.TokenResponse;
 import akkimi_BE.aja.entity.Role;
 import akkimi_BE.aja.entity.SocialType;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import global.exception.CustomException;
-import global.exception.HttpErrorCode;
-import global.util.JwtUtil;
+import akkimi_BE.aja.global.exception.CustomException;
+import akkimi_BE.aja.global.exception.HttpErrorCode;
+import akkimi_BE.aja.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,4 +1,4 @@
-package global.response;
+package akkimi_BE.aja.global.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;

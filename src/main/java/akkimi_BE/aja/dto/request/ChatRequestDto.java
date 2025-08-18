@@ -3,6 +3,6 @@ package akkimi_BE.aja.dto.request;
 import lombok.Getter;
 
 @Getter
-public class UpdateRegionRequest {
-    private String region;
+public class ChatRequestDto {
+    private String message;
 }
