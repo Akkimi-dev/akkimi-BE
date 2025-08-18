@@ -1,12 +1,16 @@
 package akkimi_BE.aja.controller;
 
+import akkimi_BE.aja.dto.request.ChatRequestDto;
 import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
 import akkimi_BE.aja.dto.response.ChatResponseDto;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.service.ChatService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/api/v1/chat")
@@ -14,12 +18,23 @@ import org.springframework.web.bind.annotation.*;
 public class ChatController {
     private final ChatService chatService;
 
-    @PostMapping
-    public ChatResponseDto chat(@AuthenticationPrincipal User user, @RequestBody String message) {
-        return chatService.talk(user, message);
+    //SSE 스트리밍 응답
+    /** 1) 사용자 메시지 전송(저장) → messageId 반환 */
+    @PostMapping("/messages")
+    @Operation(summary = "채팅 메시지 전송", description = "사용자의 채팅 메시지를 저장하고 messageId를 반환합니다")
+    public Long sendMessage(@AuthenticationPrincipal User user, @RequestBody ChatRequestDto chatRequestDto) {
+        return chatService.saveMessage(user, chatRequestDto);
     }
 
-    @GetMapping
+    /** 2) 해당 messageId에 대한 답변을 SSE로 스트리밍 */
+    @GetMapping(value = "/messages/{messageId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @Operation(summary = "챗봇 답변 스트리밍", description = "메시지에 대한 챗봇의 답변을 SSE로 스트리밍합니다")
+    public SseEmitter streamMessage(@AuthenticationPrincipal User user, @PathVariable Long messageId) {
+        return chatService.streamReply(user, messageId);
+    }
+
+    @GetMapping("/history")
+    @Operation(summary = "채팅 히스토리 조회", description = "사용자의 채팅 히스토리를 조회합니다")
     public ChatHistoryResponseDto getMessages(@AuthenticationPrincipal User user,
                                               @RequestParam(name = "limit", required = false) Integer limit,
                                               @RequestParam(name = "beforeId", required = false) Long beforeId) {
