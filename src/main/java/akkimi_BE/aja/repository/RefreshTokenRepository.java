@@ -1,6 +1,6 @@
 package akkimi_BE.aja.repository;
 
-import akkimi_BE.aja.entity.RefreshToken;
+import akkimi_BE.aja.entity.auth.RefreshToken;
 import akkimi_BE.aja.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 

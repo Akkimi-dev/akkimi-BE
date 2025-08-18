@@ -1,10 +1,12 @@
 package akkimi_BE.aja.controller;
 
 
-import akkimi_BE.aja.dto.oauth.KakaoLoginRequest;
+import akkimi_BE.aja.dto.auth.KakaoLoginRequest;
+import akkimi_BE.aja.dto.auth.LogoutRequestDto;
+import akkimi_BE.aja.dto.auth.RefreshTokenRequestDto;
+import akkimi_BE.aja.dto.auth.TokenResponse;
+import akkimi_BE.aja.dto.auth.TokenValidationResponseDto;
 import akkimi_BE.aja.dto.request.*;
-import akkimi_BE.aja.dto.response.TokenResponse;
-import akkimi_BE.aja.dto.response.TokenValidationResponseDto;
 import akkimi_BE.aja.dto.response.UserResponseDto;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.service.auth.OAuthService;

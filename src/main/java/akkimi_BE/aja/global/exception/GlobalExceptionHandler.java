@@ -1,6 +1,6 @@
-package global.exception;
+package akkimi_BE.aja.global.exception;
 
-import global.response.CustomErrorResponse;
+import akkimi_BE.aja.global.response.CustomErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;

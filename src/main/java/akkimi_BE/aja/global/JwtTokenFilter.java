@@ -1,8 +1,8 @@
-package global;
+package akkimi_BE.aja.global;
 
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.UserRepository;
-import global.util.JwtUtil;
+import akkimi_BE.aja.global.util.JwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

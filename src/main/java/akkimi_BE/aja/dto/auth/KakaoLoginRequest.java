@@ -1,4 +1,4 @@
-package akkimi_BE.aja.dto.oauth;
+package akkimi_BE.aja.dto.auth;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

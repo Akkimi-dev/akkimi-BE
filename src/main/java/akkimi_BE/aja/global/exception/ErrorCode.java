@@ -1,4 +1,4 @@
-package global.exception;
+package akkimi_BE.aja.global.exception;
 
 import org.springframework.http.HttpStatus;
 

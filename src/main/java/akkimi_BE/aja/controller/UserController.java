@@ -1,7 +1,7 @@
 package akkimi_BE.aja.controller;
 
 import akkimi_BE.aja.dto.request.UpdateNicknameRequestDto;
-import akkimi_BE.aja.dto.request.UpdateRegionRequest;
+import akkimi_BE.aja.dto.request.UpdateRegionRequestDto;
 import akkimi_BE.aja.dto.response.CurrentMaltuResponseDto;
 import akkimi_BE.aja.dto.response.UserProfileResponseDto;
 import akkimi_BE.aja.entity.User;
@@ -30,7 +30,7 @@ public class UserController {
 
     @PutMapping("/region")
     public void updateRegion(@AuthenticationPrincipal User user,
-                             @RequestBody UpdateRegionRequest request) {
+                             @RequestBody UpdateRegionRequestDto request) {
         userService.updateRegion(user, request.getRegion());
     }
 

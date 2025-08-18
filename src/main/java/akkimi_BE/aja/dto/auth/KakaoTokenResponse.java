@@ -1,4 +1,4 @@
-package akkimi_BE.aja.dto.oauth;
+package akkimi_BE.aja.dto.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
