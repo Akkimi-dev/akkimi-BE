@@ -91,7 +91,7 @@ public class UserService {
     }
 
     @Transactional
-    public Long signupWithEmail(EmailRequestDto emailRequestDto) {
+    public TokenResponse signupWithEmail(EmailRequestDto emailRequestDto) {
         // 존재하는 회원인지 한 번 더 검사
         if (userRepository.existsByEmail(emailRequestDto.getEmail())) {
             throw new CustomException(HttpErrorCode.VALIDATE_EXISTED_EMAIL);
@@ -105,11 +105,12 @@ public class UserService {
                 .role(Role.USER)
                 .build();
 
-        return userRepository.save(user).getUserId();
+        userRepository.save(user);
+        return issueTokens(user);
     }
 
     @Transactional
-    public Long signupWithPhone(PhoneRequestDto phoneRequestDto) {
+    public TokenResponse signupWithPhone(PhoneRequestDto phoneRequestDto) {
         // 존재하는 회원인지 한 번 더 검사
         if (userRepository.existsByPhoneNumber(phoneRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpErrorCode.VALIDATE_EXISTED_PHONE);
@@ -123,7 +124,8 @@ public class UserService {
                 .role(Role.USER)
                 .build();
 
-        return userRepository.save(user).getUserId();
+        userRepository.save(user);
+        return issueTokens(user);
     }
 
     @Transactional
