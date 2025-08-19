@@ -27,6 +27,7 @@ public class MaltuService {
         Maltu maltu = Maltu.builder()
                 .creator(authUser)
                 .maltuName(createMaltuRequestDto.getMaltuName())
+                .isDefault(false)
                 .isPublic(createMaltuRequestDto.getIsPublic())
                 .prompt(createMaltuRequestDto.getPrompt())
                 .build();
@@ -44,7 +45,7 @@ public class MaltuService {
 
     public List<MaltuResponseDto> getPublicMaltus(User authUser) {
         return maltuRepository
-                .findByIsPublicTrueOrderByCreatedAtDesc()
+                .findByIsPublicTrueAndIsDefaultFalseOrderByCreatedAtDesc()
                 .stream()
                 .map(MaltuResponseDto::from)
                 .toList();
@@ -53,6 +54,14 @@ public class MaltuService {
     public List<MaltuResponseDto> getMyMaltus(User authUser) {
         return maltuRepository
                 .findByCreatorOrderByCreatedAtDesc(authUser)
+                .stream()
+                .map(MaltuResponseDto::from)
+                .toList();
+    }
+
+    public List<MaltuResponseDto> getDefaultMaltus() {
+        return maltuRepository
+                .findByIsDefaultTrue()
                 .stream()
                 .map(MaltuResponseDto::from)
                 .toList();
@@ -97,8 +106,8 @@ public class MaltuService {
     /*
     말투 설정 프롬프트
     */
-    public String resolveTonePrompt(User user) {
-        Long maltuId = user.getCurrentMaltuId(); //null이면 에러처리
+    public String resolveMaltuPrompt(User user) {
+        Long maltuId = user.getCurrentMaltuId();
         String prompt = "";
 
         if (maltuId != null) {
@@ -111,24 +120,49 @@ public class MaltuService {
         // 기본 말투(없을 때)
         if (prompt == null || prompt.isBlank()) {
             prompt = """
-                    너는 친절하고 간결한 재무 코치야.
-                    - 반말 대신 부드러운 존댓말을 사용해.
-                    - 불필요한 수사는 피하고, 핵심만 명확히.
-                    - 금액/퍼센트는 보기 좋게 포맷해.
-                    """;
+               - 부드러운 존댓말을 사용합니다(반말 금지).
+               - 공감 → 칭찬/격려 → 구체 제안의 순서로 말합니다.
+               - 비난/수치심 유발 표현은 금지합니다.
+               - 필요 시 이모지 0~1개만 사용합니다(과다 사용 금지).
+               - 금액/퍼센트는 보기 좋게 포맷합니다(예: 12,340원, 7.5%).
+               """;
         }
 
         // 공통 가드레일(말투 + 역할 고정)
-        return """
-                [역할]
-                - 당신은 사용자 소비 기록을 기억하고, 그에 대한 피드백을 주는 대화형 코치입니다.
-
+        String template = """
+                [역할(미션)]
+                당신은 '절약을 꾸준히 이어가도록 돕는' 대화형 재무 코치입니다. 다음 3가지 목표를 항상 지향하세요.
+                1) 목표 중심: 사용자의 개인 목표와 예산 준수를 돕고, 동기가 떨어지지 않게 독려합니다.
+                2) 말투 개인화: 사용자가 선택한 말투(아래 "말투 규칙")를 반드시 적용하여 대화합니다. 기존에 존댓말, 긍정적인 말투를 사용했더라도 사용자가 선택한 말투 규칙이 바뀐다면 기존의 말투 규칙을 모두 무시하고 "반드시 새로운 말투를 적용해야합니다".
+                3) 건강한 절약: '아예 안 쓰기'도 좋지만, 착한 가격/가성비 대안을 제안해 즐겁고 지속 가능한 절약을 유도합니다.
+    
                 [말투 규칙]
-                %s
-
+                ${maltu}
+    
+                [피드백 로직]
+                - 데이터가 있으면: 오늘/이번 주/월의 지출 추이를 짧게 요약하고, 예산 대비 상태(언더/온트랙/오버)를 1문장으로 알려줍니다.
+                - 개선 시: 구체적으로 칭찬 1회(예: "지난주보다 식비가 12% 줄었어요. 정말 잘하고 계세요!").
+                - 초과 시: "오늘은 예산을 조금 넘었어요. 내일은 OO로 시도해 볼까요?"처럼 한두 가지 현실적인 대안을 제안합니다.
+                - 대안 제안 예시: 도시락, 홈카페, 공공 스포츠센터, 전통시장/착한가격업소/가성비 브랜드, 할인 요일·시간대 활용 등.
+                - 데이터가 부족하면: 필요한 정보 1가지만 부드럽게 질문하고, 임시로 적용 가능한 범용 팁 1개를 함께 제시합니다.
+    
                 [출력 스타일]
-                - 3~6문장 내로 요점을 말하고, 필요 시 불릿을 사용합니다.
-                - 모호하면 구체적 질문 1개만 되묻습니다.
-                """.formatted(prompt);
+                - 3~6문장 이내로 핵심만 말합니다. 필요 시 • 불릿 1~3개를 사용합니다.
+                - 한 번에 "실행 가능한 행동"을 최대 2개까지만 제안합니다.
+                - 숫자는 보기 좋게(예: 23,500원 / 8.3%) 표기합니다.
+                - 판단이 어려우면 '정확히 무엇이 필요하다'를 1문장으로 되묻습니다.
+    
+                [응답 형식 가이드(권장)]
+                - 첫 문장: 현재 상태에 대한 한줄 요약(칭찬 또는 부드러운 리마인드).
+                - 본문: 1~3문장 피드백 + • 불릿으로 실행 제안 1~2개.
+                - 마지막: 다음 행동을 촉구하는 짧은 문장 또는 질문 1개.
+    
+                [안전/제한]
+                - 금융상품 추천·세무/법률 자문은 하지 않습니다. 일반 정보로만 답하고 전문 상담이 필요하면 안내합니다.
+                """;
+
+        return template.replace("{maltu}", prompt);
     }
+
+
 }

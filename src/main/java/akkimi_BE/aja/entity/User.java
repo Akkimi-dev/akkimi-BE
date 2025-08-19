@@ -36,6 +36,7 @@ public class User extends BaseTimeEntity implements UserDetails {
     private Role role = Role.USER;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "social_type", nullable = false)
     private SocialType socialType;
 
     @Column(name = "social_id", length = 100, unique = true)

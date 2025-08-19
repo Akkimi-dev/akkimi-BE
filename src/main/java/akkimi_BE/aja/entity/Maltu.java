@@ -22,12 +22,16 @@ public class Maltu extends BaseTimeEntity {
     @Column(name = "maltu_name", nullable = false, length = 50)
     private String maltuName;
 
+    //시스템에서 만들어둔 기본 말투인지
+    @Column(name = "is_default", nullable = false)
+    private Boolean isDefault;
+
     //공유 여부
     @Column(name = "is_public", nullable = false)
     private Boolean isPublic = false;
 
     //말투 프롬프트 텍스트
-    @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String prompt;
 
     public void updateMaltu(String maltuName, String prompt){
