@@ -12,11 +12,12 @@ import lombok.*;
 public class UserProfileResponseDto {
     private Long userId;
     private String nickname;
-    private CharacterDto character;   // <- 필드명 단순화
+    private CharacterDto character;
     private String region;
     private String email;
     private String phoneNumber;
     private SocialType socialType;
+    private Boolean isSetup;
 
     public static UserProfileResponseDto from(User user, Character character) {
         // Character -> CharacterDto 변환
@@ -37,6 +38,7 @@ public class UserProfileResponseDto {
                 .email(user.getEmail())
                 .phoneNumber(user.getPhoneNumber())
                 .socialType(user.getSocialType())
+                .isSetup(user.getIsSetup())
                 .build();
     }
 

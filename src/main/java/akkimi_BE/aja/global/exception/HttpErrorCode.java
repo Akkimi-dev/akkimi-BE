@@ -28,11 +28,14 @@ public enum HttpErrorCode implements ErrorCode {
     MALTU_NOT_FOUND("해당 말투를 찾을 수 없습니다.",HttpStatus.NOT_FOUND),
     MALTU_NOT_PUBLIC("해당 말투는 현재 공유되어 있지 않습니다.",HttpStatus.BAD_REQUEST),
     USER_MALTU_NOT_SETTED("유저에 말투가 설정되어 있지 않습니다.",HttpStatus.NOT_FOUND),
-    FORBIDDEN_MALTU_ACCESS("말투 생성자와 로그인된 생성자와 맞지 않습니다.", HttpStatus.FORBIDDEN),
+    FORBIDDEN_MALTU_ACCESS("말투 생성자와 로그인된 유저와 일치하지 않습니다.", HttpStatus.FORBIDDEN),
 
     //메시지
     MESSAGE_NOT_FOUND("해당 메시지를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
-    FORBIDDEN_MESSAGE_ACCESS("해당 메시지에 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),;
+    FORBIDDEN_MESSAGE_ACCESS("해당 메시지에 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    
+    //캐릭터
+    CHARACTER_NOT_FOUND("해당 캐릭터를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
 
     private final String errorMessage; // 에러 메시지

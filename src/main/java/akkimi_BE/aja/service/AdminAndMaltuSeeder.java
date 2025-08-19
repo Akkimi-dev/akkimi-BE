@@ -33,6 +33,7 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
                                     .role(Role.ADMIN)
                                     .socialType(SocialType.LOCAL_EMAIL)
                                     .nickname("아끼미봇")
+                                    .isSetup(false)
                                     .build();
                     return userRepository.save(user);
                 });

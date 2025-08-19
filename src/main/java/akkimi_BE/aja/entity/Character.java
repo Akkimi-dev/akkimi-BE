@@ -15,10 +15,6 @@ public class Character extends BaseTimeEntity {
     @Column(name = "character_id")
     private Long characterId;
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "maltu_id", nullable = false, unique = true)
-    private Maltu maltu;
-
-    @Column(name = "character_name", nullable = false, length = 50)
+    @Column(name = "character_name", nullable = false, length = 50, unique = true)
     private String characterName;
 }
