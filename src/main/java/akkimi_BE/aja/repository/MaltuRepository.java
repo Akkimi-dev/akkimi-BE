@@ -22,4 +22,7 @@ public interface MaltuRepository extends JpaRepository<Maltu, Long> {
 
     //기본 말투 리스트 조회
     List<Maltu> findByIsDefaultTrue();
+    
+    //사용자가 생성한 모든 말투 삭제
+    void deleteAllByCreator(User creator);
 }

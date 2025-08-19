@@ -9,7 +9,9 @@ import akkimi_BE.aja.entity.Role;
 import akkimi_BE.aja.entity.SocialType;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.MaltuRepository;
+import akkimi_BE.aja.repository.ChatMessageRepository;
 import akkimi_BE.aja.repository.UserRepository;
+import akkimi_BE.aja.repository.RefreshTokenRepository;
 import akkimi_BE.aja.service.auth.RefreshTokenService;
 import akkimi_BE.aja.global.exception.CustomException;
 import akkimi_BE.aja.global.exception.HttpErrorCode;
@@ -28,6 +30,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MaltuRepository maltuRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
@@ -189,5 +193,28 @@ public class UserService {
                         .socialType(user.getSocialType().name())
                         .build())
                 .build();
+    }
+
+    @Transactional
+    public void withdrawUser(User authUser) {
+        // 인증 주체의 최신 사용자 엔티티 조회
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        // 1. RefreshToken 삭제 (모든 토큰 무효화)
+        refreshTokenRepository.deleteAllByUser(user);
+        log.info("사용자 {}의 RefreshToken 삭제 완료", user.getUserId());
+
+        // 2. ChatMessage 삭제 (사용자 채팅 내역)
+        chatMessageRepository.deleteAllByUser(user);
+        log.info("사용자 {}의 ChatMessage 삭제 완료", user.getUserId());
+
+        // 3. 사용자가 생성한 Maltu 삭제
+        maltuRepository.deleteAllByCreator(user);
+        log.info("사용자 {}의 Maltu 삭제 완료", user.getUserId());
+
+        // 4. User 엔티티 삭제
+        userRepository.delete(user);
+        log.info("사용자 {} 탈퇴 처리 완료", user.getUserId());
     }
 }
