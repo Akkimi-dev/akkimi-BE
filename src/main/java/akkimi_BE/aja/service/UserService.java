@@ -1,26 +1,102 @@
 package akkimi_BE.aja.service;
 
-import akkimi_BE.aja.dto.request.SocialSignupRequestDto;
+import akkimi_BE.aja.dto.request.*;
+import akkimi_BE.aja.dto.response.CurrentMaltuResponseDto;
+import akkimi_BE.aja.dto.auth.TokenResponse;
+import akkimi_BE.aja.dto.response.UserProfileResponseDto;
+import akkimi_BE.aja.entity.Maltu;
 import akkimi_BE.aja.entity.Role;
+import akkimi_BE.aja.entity.SocialType;
 import akkimi_BE.aja.entity.User;
+import akkimi_BE.aja.repository.MaltuRepository;
 import akkimi_BE.aja.repository.UserRepository;
-import global.exception.CustomException;
-import global.exception.HttpErrorCode;
+import akkimi_BE.aja.service.auth.RefreshTokenService;
+import akkimi_BE.aja.global.exception.CustomException;
+import akkimi_BE.aja.global.exception.HttpErrorCode;
+import akkimi_BE.aja.global.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@RequiredArgsConstructor
+@Slf4j
 @Service
+@RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class UserService {
 
     private final UserRepository userRepository;
+    private final MaltuRepository maltuRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
+
+    //프로필 조회
+    public UserProfileResponseDto getUserProfile(User authUser) {
+        // 인증 주체의 id 기반으로 최신 상태를 DB에서 다시 조회(조인 페치)
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        return UserProfileResponseDto.from(user, user.getCharacter());
+    }
 
     @Transactional
-    public Long createSocialUser(SocialSignupRequestDto socialSignupRequestDto) {
-        // 로컬 가입이라면 email/passwordHash 필수 검증
-        // 소셜 가입이라면 socialType/socialId 필수 검증
+    public void updateNickname(User authUser, String nickname) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        user.updateNickname(nickname);
+    }
+
+    @Transactional
+    public void updateRegion(User authUser, String region) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        user.updateRegion(region);
+    }
+
+    @Transactional
+    public void updateCurrentMaltu(User authUser, Long maltuId) {
+        // 인증 주체의 최신 사용자 엔티티 조회
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        // 말투 존재 여부 확인
+        Maltu maltu = maltuRepository.findById(maltuId)
+                .orElseThrow(() -> new CustomException(HttpErrorCode.MALTU_NOT_FOUND));
+
+        // 소유자가 아닌 비공개 말투 설정시 에러
+        if (Boolean.FALSE.equals(maltu.getIsPublic())
+                && !maltu.getCreator().getUserId().equals(user.getUserId())) {
+            throw new CustomException(HttpErrorCode.MALTU_NOT_PUBLIC);
+        }
+
+        user.changeCurrentMaltu(maltu.getMaltuId());
+    }
+
+    public CurrentMaltuResponseDto getCurrentMaltu(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        if (user.getCurrentMaltuId() == null) { //유저에 말투 설정x
+            throw new CustomException(HttpErrorCode.USER_MALTU_NOT_SETTED);
+        }
+
+        Maltu maltu = maltuRepository.findById(user.getCurrentMaltuId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.MALTU_NOT_FOUND));
+
+        return CurrentMaltuResponseDto.from(maltu);
+    }
+
+    @Transactional
+    public Long signupWithEmail(EmailRequestDto emailRequestDto) {
+        // 존재하는 회원인지 한 번 더 검사
+        if (userRepository.existsByEmail(emailRequestDto.getEmail())) {
+            throw new CustomException(HttpErrorCode.VALIDATE_EXISTED_EMAIL);
+        }
+
         User user = User.builder()
                 .email(emailRequestDto.getEmail())
                 .passwordHash(passwordEncoder.encode(emailRequestDto.getPassword()))
