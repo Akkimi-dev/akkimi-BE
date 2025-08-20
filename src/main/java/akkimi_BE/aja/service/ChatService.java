@@ -42,7 +42,6 @@ public class ChatService {
     private final FeedbackPromptBuilder feedbackPromptBuilder;
 
     // 최근 대화 조회(limit 없으면 30개 기본값)
-    @Transactional(readOnly = true)
     public ChatHistoryResponseDto getMessages(User user, Integer limit, Long beforeId) {
         int size = Math.max(1, Math.min(limit == null ? 30 : limit, 100));
 
@@ -57,18 +56,25 @@ public class ChatService {
         DateTimeFormatter timeHeaderFmt = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREA);
 
         List<ChatHistoryResponseDto.MessageDto> items = new ArrayList<>(desc.size());
-        ChatMessage prev = null;
 
+        ChatMessage prev = null;
         for (ChatMessage cur : desc) {
             LocalDateTime nowTs = cur.getCreatedAt();
-            boolean showDate = (prev == null) ||
-                    !prev.getCreatedAt().toLocalDate().equals(nowTs.toLocalDate());
 
+            boolean showDate = false;
             boolean showTime = false;
-            if (!showDate) {
-                long gapMin = Duration.between(prev.getCreatedAt(), nowTs).toMinutes();
-                showTime = gapMin >= 60; // 60분 이상만 시간 헤더
+
+            if (prev != null) {
+                // 날짜가 바뀌면 날짜 라벨
+                showDate = !prev.getCreatedAt().toLocalDate().equals(nowTs.toLocalDate());
+
+                // 같은 날짜이면서 60분 이상 간격이면 시간 라벨
+                if (!showDate) {
+                    long gapMin = Duration.between(prev.getCreatedAt(), nowTs).toMinutes();
+                    showTime = gapMin >= 60;
+                }
             }
+            // prev == null (첫 메시지)는 showDate=false, showTime=false 무조건 라벨 x
 
             items.add(ChatHistoryResponseDto.MessageDto.builder()
                     .chatId(cur.getChatId())
@@ -86,7 +92,7 @@ public class ChatService {
             prev = cur;
         }
 
-        Long nextBeforeId = hasMore ? desc.get(0).getChatId() : null;
+        Long nextBeforeId = hasMore ? desc.get(desc.size() - 1).getChatId() : null;
 
         return ChatHistoryResponseDto.builder()
                 .messages(items)

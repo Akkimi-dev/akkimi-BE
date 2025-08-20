@@ -28,7 +28,7 @@ public class ChatController {
     }
 
     /** 2) 해당 messageId에 대한 답변을 SSE로 스트리밍 */
-    @GetMapping(value = "/messages/{messageId}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/sse/messages/{messageId}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "챗봇 답변 스트리밍", description = "메시지에 대한 챗봇의 답변을 SSE로 스트리밍합니다")
     @SecurityRequirement(name = "bearerAuth")
     public SseEmitter streamMessage(@AuthenticationPrincipal User user, @PathVariable Long messageId) {
