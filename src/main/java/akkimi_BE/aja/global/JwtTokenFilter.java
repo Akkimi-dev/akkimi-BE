@@ -71,11 +71,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             return;
         }
 
+
         //여기까지
 
         String token = getTokenFromRequest(request);
 
         // 토큰이 없는 경우 - 다음 필터로 진행 (공개 API 접근 가능)
+        // 토큰 없는데 인증을 하는 경우 spring security에서 403 Forbidden
         if(token == null) {
             filterChain.doFilter(request, response);
             return;
