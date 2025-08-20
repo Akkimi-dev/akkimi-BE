@@ -35,10 +35,11 @@ public enum HttpErrorCode implements ErrorCode {
     FORBIDDEN_MESSAGE_ACCESS("해당 메시지에 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
     
     //캐릭터
-    CHARACTER_NOT_FOUND("해당 캐릭터를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
-    NOT_FOUND("찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-    BAD_REQUST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
-    ;
+    CHARACTER_NOT_FOUND("해당 캐릭터를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    //목표
+    SAVING_GOAL_NOT_FOUND("해당 목표를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    DATE_BAD_REQUST("시작 날짜가 종료 날짜보다 느릴 수 없습니다.", HttpStatus.BAD_REQUEST),;
 
 
     private final String errorMessage; // 에러 메시지

@@ -27,7 +27,7 @@ public class SavingGoalService {
     public SavingGoalResponseDto getCurrentGoal(User user) {
         SavingGoal goal = savingGoalRepository
                 .findByUser_UserIdAndIsCurrentGoalTrue(user.getUserId())
-                .orElseThrow(()-> new CustomException(HttpErrorCode.NOT_FOUND));
+                .orElseThrow(()-> new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND));
         return  SavingGoalResponseDto.from(goal);
 
     }
@@ -42,17 +42,17 @@ public class SavingGoalService {
     public SavingGoalResponseDto getGoalById(User user, Long goalId) {
         SavingGoal goal = savingGoalRepository
                 .findByGoalIdAndUser_UserId(goalId, user.getUserId())
-                .orElseThrow(()-> new CustomException(HttpErrorCode.NOT_FOUND));
+                .orElseThrow(()-> new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND));
         return SavingGoalResponseDto.from(goal);
     }
 
     @Transactional
     public  Long createSavingGoal(User user, CreateSavingGoalRequestDto requestDto) {
         if (requestDto.getStartDate().isAfter(requestDto.getEndDate())) {
-            throw new CustomException(HttpErrorCode.BAD_REQUST);
+            throw new CustomException(HttpErrorCode.DATE_BAD_REQUST);
         }
         if (savingGoalRepository.existsByUser_UserIdAndIsCurrentGoalTrue(user.getUserId())) {
-            throw new CustomException(HttpErrorCode.BAD_REQUST);
+            throw new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND);
         }
 
         SavingGoal saved = savingGoalRepository.save(
@@ -73,9 +73,9 @@ public class SavingGoalService {
     public void updateGoal(User user, Long goalId, UpdateSavingGoalRequestDto requestDto) {
         SavingGoal goal = savingGoalRepository
                 .findByGoalIdAndUser_UserId(goalId, user.getUserId())
-                .orElseThrow(()-> new CustomException(HttpErrorCode.BAD_REQUST));
+                .orElseThrow(()-> new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND));
         if (requestDto.getStartDate().isAfter(requestDto.getEndDate())) {
-            throw new CustomException(HttpErrorCode.BAD_REQUST);
+            throw new CustomException(HttpErrorCode.DATE_BAD_REQUST);
         }
         goal.updatePartial(requestDto.getPurposeBudget(),requestDto.getPurpose(),requestDto.getStartDate(),requestDto.getEndDate());
     }
@@ -84,6 +84,6 @@ public class SavingGoalService {
     public void deleteGoal(User user, Long goalId) {
         SavingGoal goal = savingGoalRepository
                 .findByGoalIdAndUser_UserId(goalId, user.getUserId())
-                .orElseThrow(()->new CustomException(HttpErrorCode.NOT_FOUND));
+                .orElseThrow(()->new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND));
     }
 }
