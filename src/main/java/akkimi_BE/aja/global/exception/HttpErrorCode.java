@@ -36,6 +36,9 @@ public enum HttpErrorCode implements ErrorCode {
     
     //캐릭터
     CHARACTER_NOT_FOUND("해당 캐릭터를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    NOT_FOUND("찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    BAD_REQUST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
+    ;
 
 
     private final String errorMessage; // 에러 메시지
