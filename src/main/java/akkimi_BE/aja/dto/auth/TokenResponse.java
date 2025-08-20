@@ -31,5 +31,6 @@ public class TokenResponse {
         private String phoneNumber;
         private String role;
         private String socialType;
+        private Boolean isSetup;
     }
 }

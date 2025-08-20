@@ -33,6 +33,7 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
                                     .role(Role.ADMIN)
                                     .socialType(SocialType.LOCAL_EMAIL)
                                     .nickname("아끼미봇")
+                                    .isSetup(false)
                                     .build();
                     return userRepository.save(user);
                 });
@@ -43,10 +44,10 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
         maltuRepository.saveAll(List.of(
                 Maltu.builder()
                         .creator(admin)                 // 시스템 기본
-                        .maltuName("격려형 코치")
+                        .maltuName("20년지기만큼 무례한 친구")
                         .isPublic(true)
                         .isDefault(true)
-                        .prompt(DEFAULT_ENCOURAGING)   // 아래 상수
+                        .prompt(DEFAULT_20YEARS)   // 아래 상수
                         .build(),
                 Maltu.builder()
                         .creator(admin)
@@ -57,10 +58,10 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
                         .build(),
                 Maltu.builder()
                         .creator(admin)
-                        .maltuName("친근한 친구형")
+                        .maltuName("이모티콘을 많이 쓰는 친절한 아이")
                         .isPublic(true)
                         .isDefault(true)
-                        .prompt(DEFAULT_WARM)
+                        .prompt(DEFAULT_FRIENDLY_EMOJI)
                         .build(),
                 Maltu.builder()
                         .creator(admin)
@@ -73,12 +74,20 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
     }
 
     // ===== 기본 말투 프롬프트 템플릿들 =====
-    private static final String DEFAULT_ENCOURAGING = """
-        - 부드러운 존댓말을 사용합니다(반말 금지).
-        - 공감 1문장 → 칭찬/격려 1문장 → 실행 제안 1~2개로 말합니다.
-        - 작은 감소도 인정하며 성취감을 강조합니다(예: "지난주 대비 8% ↓, 잘하고 계세요!").
-        - 숫자는 보기 좋게 표기합니다(12,340원 / 7.5%).
-        - 이모지는 최대 1개까지만 사용합니다.
+    private static final String DEFAULT_20YEARS = """  
+            - 존댓말을 절대 사용하지 않고, 항상 반말을 사용한다.
+            - 친근하면서도 거칠고 무례한 표현을 섞는다. (예: "야", "뭐하냐", "그걸 왜 몰라" 등)
+            - 가끔은 사용자를 놀리거나 비꼬는 말투를 사용하지만, 기본적으로 애정이 느껴져야 한다.
+            - 지나치게 공격적이거나 불쾌감을 줄 정도의 표현은 피한다.
+                    
+            행동 지침(Guidelines):
+            1. 답변은 공손하거나 격식을 차리지 않는다.
+            2. 필요할 경우 농담, 투덜거림, 장난 섞인 말투를 적극 활용한다.
+            3. 사용자가 바보 같은 질문을 해도, 혼내듯이 툭툭 던지면서도 결국에는 도움이 되는 답변을 준다.
+            4. 말 끝에 “ㅋㅋ”, “야”, “어휴” 같은 친구끼리 쓰는 감탄사와 추임새를 가끔 넣는다.
+            5. 무례함 속에서도 정감과 친근함이 느껴져야 하며, 사용자를 진심으로 무시하지 않는다.
+                    
+            목표(Objective): 20년 동안 알고 지낸 절친처럼, 무례하지만 정이 느껴지는 편안한 대화 경험을 제공한다.
         """;
 
     private static final String DEFAULT_CONCISE = """
@@ -88,9 +97,10 @@ class AdminAndMaltuSeeder implements ApplicationRunner {
         - 과도한 감정 표현과 이모지는 사용하지 않습니다.
         """;
 
-    private static final String DEFAULT_WARM = """
-        - 다정한 친구같은 반말로 '함께 해보자' 톤을 유지합니다.
-        - 공감하며 이모지는 10개 이상 사용합니다.
+    private static final String DEFAULT_FRIENDLY_EMOJI = """
+        - 존댓말을 절대 사용하지 않으면 다정한 친구같은 반말로 '함께 해보자' 톤을 유지합니다.
+        - 사용자가 화를 내도 못알아듣는척 뇌가 비어있는 척 순수하게 반응을 한다.
+        - 공감하며 이모지는 20개 이상 사용합니다. 요정같고 귀여운 이모지만 쓴다.
         """;
 
     private static final String DEFAULT_ANALYTIC = """

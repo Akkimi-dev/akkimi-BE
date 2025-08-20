@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -30,7 +31,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/kakao")
-    @Operation(summary = "카카오 로그인", description = "카카오 OAuth를 통한 로그인", security = @SecurityRequirement(name = ""))
+    @Operation(summary = "카카오 로그인", description = "카카오 OAuth를 통한 로그인")
     public TokenResponse kakaoLogin(@RequestBody KakaoLoginRequest request) {
         log.info("카카오 로그인 요청 - 인가 코드: {}",
                 request.getCode().substring(0, Math.min(request.getCode().length(), 10)) + "...");
@@ -45,8 +46,10 @@ public class AuthController {
         }
     }
 
+
     @GetMapping("/me")
-    @Operation(summary = "현재 사용자 정보 조회", description = "인증된 사용자의 정보를 조회합니다")
+    @Operation(hidden = true)
+    @SecurityRequirement(name = "bearerAuth")
     public UserResponseDto getCurrentUserInfo(Authentication authentication) {
         User user = (User) authentication.getPrincipal(); // principal이 이제 User 객체이므로 직접 가져옴
         return UserResponseDto.from(user);
@@ -55,6 +58,7 @@ public class AuthController {
     //Todo 온보딩 여부 포함시키기
     @GetMapping("/validate")
     @Operation(summary = "토큰 유효성 검증", description = "JWT 토큰의 유효성을 검증합니다")
+    @SecurityRequirement(name = "bearerAuth")
     public TokenValidationResponseDto validateToken(Authentication authentication) {
         return TokenValidationResponseDto.builder()
                 .valid(true)
@@ -65,13 +69,14 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    @Operation(summary = "토큰 갱신", description = "리프레시 토큰으로 새로운 액세스 토큰을 발급합니다", security = @SecurityRequirement(name = ""))
+    @Operation(summary = "토큰 갱신", description = "리프레시 토큰으로 새로운 액세스 토큰을 발급합니다")
     public TokenResponse refresh(@RequestBody RefreshTokenRequestDto refreshTokenRequestDto) {
         return oAuthService.refresh(refreshTokenRequestDto.getRefreshToken());
     }
 
     @PostMapping("/logout")
     @Operation(summary = "로그아웃", description = "사용자 로그아웃 처리")
+    @SecurityRequirement(name = "bearerAuth")
     public Boolean logout(Authentication authentication, @RequestBody LogoutRequestDto logoutRequestDto) {
         return oAuthService.logout(authentication, logoutRequestDto.getRefreshToken());
     }
@@ -79,13 +84,13 @@ public class AuthController {
     /* 회원가입 */
     @PostMapping("/signup/email")
     @Operation(summary = "이메일 회원가입", description = "이메일을 통한 회원가입")
-    public Long signupWithEmail(@RequestBody EmailRequestDto emailRequestDto) {
+    public TokenResponse signupWithEmail(@RequestBody EmailRequestDto emailRequestDto) {
         return userService.signupWithEmail(emailRequestDto);
     }
 
     @PostMapping("/signup/phone")
     @Operation(summary = "전화번호 회원가입", description = "전화번호를 통한 회원가입")
-    public Long signupWithPhone(@RequestBody PhoneRequestDto phoneSignupRequestDto) {
+    public TokenResponse signupWithPhone(@RequestBody PhoneRequestDto phoneSignupRequestDto) {
         return userService.signupWithPhone(phoneSignupRequestDto);
     }
 
@@ -116,6 +121,14 @@ public class AuthController {
         Boolean result = userService.validateEmail(emailValidateRequestDto);
         return Map.of("available", result);
 
+    }
+
+    @DeleteMapping("/withdrawal")
+    @Operation(summary = "회원 탈퇴", description = "사용자 계정을 완전히 삭제합니다")
+    @SecurityRequirement(name = "bearerAuth")
+    public Map<String, String> withdrawUser(@AuthenticationPrincipal User user) {
+        userService.withdrawUser(user);
+        return Map.of("message", "회원 탈퇴가 완료되었습니다");
     }
 
 }

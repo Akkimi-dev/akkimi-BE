@@ -4,12 +4,16 @@ import akkimi_BE.aja.dto.request.*;
 import akkimi_BE.aja.dto.response.CurrentMaltuResponseDto;
 import akkimi_BE.aja.dto.auth.TokenResponse;
 import akkimi_BE.aja.dto.response.UserProfileResponseDto;
+import akkimi_BE.aja.entity.Character;
 import akkimi_BE.aja.entity.Maltu;
 import akkimi_BE.aja.entity.Role;
 import akkimi_BE.aja.entity.SocialType;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.MaltuRepository;
+import akkimi_BE.aja.repository.ChatMessageRepository;
+import akkimi_BE.aja.repository.CharacterRepository;
 import akkimi_BE.aja.repository.UserRepository;
+import akkimi_BE.aja.repository.RefreshTokenRepository;
 import akkimi_BE.aja.service.auth.RefreshTokenService;
 import akkimi_BE.aja.global.exception.CustomException;
 import akkimi_BE.aja.global.exception.HttpErrorCode;
@@ -28,6 +32,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final MaltuRepository maltuRepository;
+    private final ChatMessageRepository chatMessageRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final CharacterRepository characterRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final RefreshTokenService refreshTokenService;
@@ -47,6 +54,21 @@ public class UserService {
                 .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
 
         user.updateNickname(nickname);
+    }
+
+    @Transactional
+    public Boolean updateCharacter(User authUser, Long characterId) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        // 캐릭터 존재 여부 확인
+        Character character = characterRepository.findById(characterId)
+                .orElseThrow(() -> new CustomException(HttpErrorCode.CHARACTER_NOT_FOUND));
+
+        // 닉네임과 캐릭터가 모두 있으면 isSetup도 true로 변경
+        user.updateCharacter(character);
+
+        return user.getIsSetup();
     }
 
     @Transactional
@@ -91,7 +113,7 @@ public class UserService {
     }
 
     @Transactional
-    public Long signupWithEmail(EmailRequestDto emailRequestDto) {
+    public TokenResponse signupWithEmail(EmailRequestDto emailRequestDto) {
         // 존재하는 회원인지 한 번 더 검사
         if (userRepository.existsByEmail(emailRequestDto.getEmail())) {
             throw new CustomException(HttpErrorCode.VALIDATE_EXISTED_EMAIL);
@@ -103,13 +125,15 @@ public class UserService {
                 .socialId("LOCAL_EMAIL:" + emailRequestDto.getEmail()) //토큰 발급을 위해
                 .socialType(SocialType.LOCAL_EMAIL) // 로컬 가입표시
                 .role(Role.USER)
+                .isSetup(false)
                 .build();
 
-        return userRepository.save(user).getUserId();
+        userRepository.save(user);
+        return issueTokens(user);
     }
 
     @Transactional
-    public Long signupWithPhone(PhoneRequestDto phoneRequestDto) {
+    public TokenResponse signupWithPhone(PhoneRequestDto phoneRequestDto) {
         // 존재하는 회원인지 한 번 더 검사
         if (userRepository.existsByPhoneNumber(phoneRequestDto.getPhoneNumber())) {
             throw new CustomException(HttpErrorCode.VALIDATE_EXISTED_PHONE);
@@ -121,9 +145,11 @@ public class UserService {
                 .socialId("LOCAL_PHONE:" + phoneRequestDto.getPhoneNumber()) //토큰 발급을 위해
                 .socialType(SocialType.LOCAL_PHONE) // 로컬 가입표시
                 .role(Role.USER)
+                .isSetup(false)
                 .build();
 
-        return userRepository.save(user).getUserId();
+        userRepository.save(user);
+        return issueTokens(user);
     }
 
     @Transactional
@@ -185,7 +211,37 @@ public class UserService {
                         .phoneNumber(user.getPhoneNumber())
                         .role(user.getRole().name())
                         .socialType(user.getSocialType().name())
+                        .isSetup(user.getIsSetup())
                         .build())
                 .build();
+    }
+
+    @Transactional
+    public void withdrawUser(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        // 1. RefreshToken 삭제 (모든 토큰 무효화)
+        refreshTokenRepository.deleteAllByUser(user);
+        log.info("사용자 {}의 RefreshToken 삭제 완료", user.getUserId());
+
+        // 2. ChatMessage 삭제 (사용자 채팅 내역)
+        chatMessageRepository.deleteAllByUser(user);
+        log.info("사용자 {}의 ChatMessage 삭제 완료", user.getUserId());
+
+        // 3. 사용자가 생성한 Maltu 삭제
+        maltuRepository.deleteAllByCreator(user);
+        log.info("사용자 {}의 Maltu 삭제 완료", user.getUserId());
+
+        // 4. User 엔티티 삭제
+        userRepository.delete(user);
+        log.info("사용자 {} 탈퇴 처리 완료", user.getUserId());
+    }
+
+    public Boolean getIsSetup(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
+        return user.getIsSetup();
     }
 }

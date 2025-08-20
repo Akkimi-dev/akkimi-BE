@@ -1,4 +1,4 @@
-package akkimi_BE.aja.config;
+package akkimi_BE.aja.global.config;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -38,8 +38,6 @@ public class SwaggerConfig {
                                         .name(BEARER_SCHEME)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
-                                        .bearerFormat("JWT")))
-                // 모든 엔드포인트에 Bearer <token> 기본 적용
-                .addSecurityItem(new SecurityRequirement().addList(BEARER_SCHEME));
+                                        .bearerFormat("JWT")));
     }
 }

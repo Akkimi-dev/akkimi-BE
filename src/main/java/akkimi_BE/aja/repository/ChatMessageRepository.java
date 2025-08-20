@@ -23,4 +23,6 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             @Param("userId") Long userId,
             @Param("beforeId") Long beforeId,
             Pageable pageable);
+    
+    void deleteAllByUser(User user);
 }
