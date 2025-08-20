@@ -8,13 +8,17 @@ import akkimi_BE.aja.entity.TodayDate;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.global.exception.CustomException;
 import akkimi_BE.aja.global.exception.HttpErrorCode;
+import akkimi_BE.aja.mapper.TodayConsumptionMapper;
 import akkimi_BE.aja.repository.SavingGoalRepository;
 import akkimi_BE.aja.repository.TodayConsumptionRepository;
 import akkimi_BE.aja.repository.TodayDateRepository;
-import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import akkimi_BE.aja.dto.response.TodayConsumptionResponseDto;
+import akkimi_BE.aja.dto.response.DayConsumptionSummaryDto;
+import akkimi_BE.aja.dto.response.MonthConsumptionSummaryDto;
+import static akkimi_BE.aja.mapper.TodayConsumptionMapper.toDto;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -95,55 +99,83 @@ public class TodayConsumptionService {
         todayConsumptionRepository.delete(c);
     }
 
-    public List<TodayConsumption> getDay(User user, Long goalId, LocalDate date) {
-        SavingGoal goal = savingGoalRepository.findByGoalIdAndUser_UserId(goalId,user.getUserId()).orElseThrow(()->new CustomException(HttpErrorCode.UNAUTHORIZED));
-        validateDateInRange(date,goal);
+    public List<TodayConsumptionResponseDto> getDay(User user, Long goalId, LocalDate date) {
+        SavingGoal goal = savingGoalRepository.findByGoalIdAndUser_UserId(goalId,user.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED));
+        validateDateInRange(date, goal);
 
-        TodayDate todayDate = todayDateRepository.findByGoal_GoalIdAndTodayDate(goalId,date)
+        TodayDate todayDate = todayDateRepository.findByGoal_GoalIdAndTodayDate(goalId, date)
                 .orElse(null);
 
         if (todayDate == null) return List.of();
-        return todayDate.getConsumptions();
+
+        return todayDate.getConsumptions().stream()
+                .map(TodayConsumptionMapper::toDto)
+                .toList();
     }
 
-    public Map<String,Object> getDaySummary(User user, Long goalId, LocalDate date) {
-        var list = getDay(user,goalId,date);
-        int total = list.stream().mapToInt(c  -> c.getAmount() == null ? 0 : c.getAmount()).sum();
+    public DayConsumptionSummaryDto getDaySummary(User user, Long goalId, LocalDate date) {
+        var list = getDay(user, goalId, date);
+        int total = list.size();
+        int sum = list.stream().mapToInt(c -> c.getAmount() == null ? 0 : c.getAmount()).sum();
 
-        var summary = list.stream().map(c -> Map.of("consumptionId",c.getConsumptionId(),"price",c.getAmount())).toList();
+        var items = list.stream()
+                .map(c -> DayConsumptionSummaryDto.Item.builder()
+                        .consumptionId(c.getConsumptionId())
+                        .price(c.getAmount() == null ? 0 : c.getAmount())
+                        .build())
+                .toList();
 
-        return Map.of("date", date.toString(),"total",summary.size(),"summary",summary,"sum",total);
+        return DayConsumptionSummaryDto.builder()
+                .date(date)
+                .total(total)
+                .sum(sum)
+                .summary(items)
+                .build();
     }
 
-    public List<TodayConsumption> getMonth(User user, Long goalId, YearMonth ym) {
+    public List<TodayConsumptionResponseDto> getMonth(User user, Long goalId, YearMonth ym) {
         SavingGoal goal = savingGoalRepository.findByGoalIdAndUser_UserId(goalId,user.getUserId())
-                .orElseThrow(()->new CustomException(HttpErrorCode.UNAUTHORIZED));
+                .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED));
 
         LocalDate start = ym.atDay(1);
         LocalDate end = ym.atEndOfMonth();
 
-        LocalDate from = start.isBefore(goal.getStartDate()) ? goal.getStartDate(): start;
-        LocalDate to = end.isAfter(goal.getEndDate()) ? goal.getEndDate():end;
-        if (from.isBefore(to)) return List.of();
+        LocalDate from = start.isBefore(goal.getStartDate()) ? goal.getStartDate() : start;
+        LocalDate to = end.isAfter(goal.getEndDate()) ? goal.getEndDate() : end;
 
-        var dates = todayDateRepository.findAllByGoal_GoalIdAndTodayDateBetween(goalId,from,to);
+        if (from.isAfter(to)) return List.of(); // ✅ 범위 체크 수정
+
+        var dates = todayDateRepository.findAllByGoal_GoalIdAndTodayDateBetween(goalId, from, to);
+
         return dates.stream()
-                .flatMap(d->d.getConsumptions().stream())
+                .flatMap(d -> d.getConsumptions().stream())
+                .map(TodayConsumptionMapper::toDto)
                 .toList();
     }
 
-    public Map<String,Object> getMonthSummary(User user, Long goalId, YearMonth ym) {
+    public MonthConsumptionSummaryDto getMonthSummary(User user, Long goalId, YearMonth ym) {
         var list = getMonth(user, goalId, ym);
 
-        var byDate = list.stream().collect(Collectors.groupingBy(
-                c->c.getTodayDate().getTodayDate(),
-                Collectors.summingInt(c->c.getAmount() == null ? 0 : c.getAmount())));
+        var byDate = list.stream().collect(
+                java.util.stream.Collectors.groupingBy(
+                        c -> c.getDate().toString(),
+                        java.util.stream.Collectors.summingInt(c -> c.getAmount() == null ? 0 : c.getAmount())
+                )
+        );
 
         var summary = byDate.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
-                .map(e -> Map.of("date",e.getKey().toString(),"price",e.getValue())).toList();
+                .map(e -> MonthConsumptionSummaryDto.DateSummary.builder()
+                        .date(e.getKey())
+                        .price(e.getValue())
+                        .build())
+                .toList();
 
-        return Map.of("month", ym.toString(),"summary",summary);
+        return MonthConsumptionSummaryDto.builder()
+                .month(ym)
+                .summary(summary)
+                .build();
     }
 
     private void validateDateInRange(LocalDate date, SavingGoal goal) {

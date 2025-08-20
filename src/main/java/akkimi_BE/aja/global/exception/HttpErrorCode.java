@@ -32,7 +32,10 @@ public enum HttpErrorCode implements ErrorCode {
 
     //메시지
     MESSAGE_NOT_FOUND("해당 메시지를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
-    FORBIDDEN_MESSAGE_ACCESS("해당 메시지에 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),;
+    FORBIDDEN_MESSAGE_ACCESS("해당 메시지에 접근 권한이 없습니다.", HttpStatus.FORBIDDEN),
+    NOT_FOUND("찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+    BAD_REQUST("잘못된 요청입니다.", HttpStatus.BAD_REQUEST),
+    ;
 
 
     private final String errorMessage; // 에러 메시지

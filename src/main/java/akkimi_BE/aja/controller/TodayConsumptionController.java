@@ -3,6 +3,9 @@ package akkimi_BE.aja.controller;
 
 import akkimi_BE.aja.dto.request.CreateTodayConsumptionRequestDto;
 import akkimi_BE.aja.dto.request.UpdateTodayConsumptionDto;
+import akkimi_BE.aja.dto.response.DayConsumptionSummaryDto;
+import akkimi_BE.aja.dto.response.MonthConsumptionSummaryDto;
+import akkimi_BE.aja.dto.response.TodayConsumptionResponseDto;
 import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.service.TodayConsumptionService;
@@ -51,7 +54,7 @@ public class TodayConsumptionController {
     }
 
     @GetMapping("/goals/{goalId}/days")
-    public List<TodayConsumption> getDay(
+    public List<TodayConsumptionResponseDto> getDay(
             @AuthenticationPrincipal User user,
             @PathVariable Long goalId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date
@@ -60,7 +63,7 @@ public class TodayConsumptionController {
     }
 
     @GetMapping("/goals/{goalId}/days/summary")
-    public Map<String,Object> getDaySummary(
+    public DayConsumptionSummaryDto getDaySummary(
             @AuthenticationPrincipal User user,
             @PathVariable Long goalId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date
@@ -69,7 +72,7 @@ public class TodayConsumptionController {
     }
 
     @GetMapping("/goals/{goalId}/month")
-    public List<TodayConsumption> getmMonth(
+    public List<TodayConsumptionResponseDto> getmMonth(
             @AuthenticationPrincipal User user,
             @PathVariable Long goalId,
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth ym
@@ -78,7 +81,7 @@ public class TodayConsumptionController {
     }
 
     @GetMapping("/goals/{goalId}/month/summary")
-    public Map<String,Object> getMonthSummary(
+    public MonthConsumptionSummaryDto getMonthSummary(
             @AuthenticationPrincipal User user,
             @PathVariable Long goalId,
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth ym
