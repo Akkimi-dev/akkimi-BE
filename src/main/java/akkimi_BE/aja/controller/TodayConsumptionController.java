@@ -9,6 +9,9 @@ import akkimi_BE.aja.dto.response.TodayConsumptionResponseDto;
 import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.service.TodayConsumptionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -23,9 +26,12 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
+@Tag(name = "일일 소비 API")
 public class TodayConsumptionController {
     private final TodayConsumptionService todayConsumptionService;
 
+    @Operation(summary = "소비 내역 생성", description = "오늘의 소비 내역을 등록합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/goals/{goalId}/days/{date}/consumptions")
     public Long createConsumption(
             @AuthenticationPrincipal User user,
@@ -36,6 +42,8 @@ public class TodayConsumptionController {
         return todayConsumptionService.create(user, goalId, date, req);
     }
 
+    @Operation(summary = "소비 내역 수정", description = "기존 소비 내역을 수정합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PatchMapping("/consumptions/{consumptionId}")
     public void updateConsumption(
             @AuthenticationPrincipal User user,
@@ -45,6 +53,8 @@ public class TodayConsumptionController {
         todayConsumptionService.update(user, consumptionId, req);
     }
 
+    @Operation(summary = "소비 내역 삭제", description = "소비 내역을 삭제합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/consumptions/{consumptionId}")
     public void deleteConsumption(
             @AuthenticationPrincipal User user,
@@ -53,6 +63,8 @@ public class TodayConsumptionController {
         todayConsumptionService.delete(user, consumptionId);
     }
 
+    @Operation(summary = "일 소비 내역 조회", description = "특정 날짜의 모든 소비 내역을 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/goals/{goalId}/days")
     public List<TodayConsumptionResponseDto> getDay(
             @AuthenticationPrincipal User user,
@@ -62,6 +74,8 @@ public class TodayConsumptionController {
         return todayConsumptionService.getDay(user, goalId, date);
     }
 
+    @Operation(summary = "일 소비 요약 조회", description = "특정 날짜의 소비 요약 정보를 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/goals/{goalId}/days/summary")
     public DayConsumptionSummaryDto getDaySummary(
             @AuthenticationPrincipal User user,
@@ -71,6 +85,8 @@ public class TodayConsumptionController {
         return todayConsumptionService.getDaySummary(user, goalId, date);
     }
 
+    @Operation(summary = "달 소비 내역 조회", description = "특정 월의 모든 소비 내역을 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/goals/{goalId}/month")
     public List<TodayConsumptionResponseDto> getmMonth(
             @AuthenticationPrincipal User user,
@@ -80,6 +96,8 @@ public class TodayConsumptionController {
         return todayConsumptionService.getMonth(user, goalId, ym);
     }
 
+    @Operation(summary = "달 소비 요약 조회", description = "특정 월의 소비 요약 정보를 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/goals/{goalId}/month/summary")
     public MonthConsumptionSummaryDto getMonthSummary(
             @AuthenticationPrincipal User user,
