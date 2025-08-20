@@ -4,6 +4,7 @@ import akkimi_BE.aja.dto.request.ChatRequestDto;
 import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
 import akkimi_BE.aja.entity.ChatMessage;
 import akkimi_BE.aja.entity.Speaker;
+import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.global.exception.CustomException;
 import akkimi_BE.aja.global.exception.HttpErrorCode;
@@ -38,6 +39,7 @@ public class ChatService {
     private final ChatClient chatClient;
     private final MaltuService maltuService;
     private final ChatMessageRepository chatMessageRepository;
+    private final FeedbackPromptBuilder feedbackPromptBuilder;
 
     // 최근 대화 조회(limit 없으면 30개 기본값)
     @Transactional(readOnly = true)
@@ -230,6 +232,34 @@ public class ChatService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public void sendConsumptionFeedBack(User user, TodayConsumption consumption) {
+        Long maltuId = user.getCurrentMaltuId();
+
+        String systemPrompt = maltuService.resolveMaltuPrompt(user);
+        String userMessage = feedbackPromptBuilder.buildUserUtterance(consumption);
+        ChatMessage saveUser = chatMessageRepository.save(
+                ChatMessage.of(user, maltuId, Speaker.USER, userMessage, true)
+        );
+
+        String assistantReply;
+        try {
+            assistantReply = chatClient
+                    .prompt()
+                    .system(systemPrompt)
+                    .user(userMessage)
+                    .options(ChatOptions.builder().temperature(0.4).build())
+                    .call()
+                    .content();
+        }catch (org.springframework.ai.retry.NonTransientAiException e){
+            assistantReply = "지금은 피드백을 생성하기 어려워요. 잠시 후 다시 시도해주세요";
+        }
+
+        chatMessageRepository.save(
+                ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, true)
+        );
     }
 
     private String safe(String s) {

@@ -1,5 +1,6 @@
 package akkimi_BE.aja.service;
 
+import akkimi_BE.aja.entity.TodayConsumption;
 import org.springframework.stereotype.Component;
 
 import java.text.NumberFormat;
@@ -11,6 +12,23 @@ import java.util.Locale;
  */
 @Component
 public class FeedbackPromptBuilder {
+    private static final NumberFormat money = NumberFormat.getInstance(Locale.KOREA);
+
+    public String buildUserUtterance(TodayConsumption consumption) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("오늘")
+                .append(consumption.getCategory()).append("로 ")
+                .append(consumption.getItemName()).append("에 ")
+                .append(consumption.getAmount()).append("원 썼어.");
+
+        if (consumption.getDescription() != null && !consumption.getDescription().isEmpty()) {
+            sb.append("변명:").append(consumption.getDescription());
+        }
+
+        sb.append("\"위 소비 내역을 바탕으로, 오늘의 소비 습관에 대한 코칭 피드백을 간결하게 알려주세요.\"");
+        return sb.toString();
+    }
     //TODO 정후 : 일일소비생성 dto로 받아와 프롬프트 수정하기. 아래는 예시
 //    public String buildUserMessage(DailyConsumptionCreateRequestDto req) {
 //        var nf = NumberFormat.getInstance(Locale.KOREA);

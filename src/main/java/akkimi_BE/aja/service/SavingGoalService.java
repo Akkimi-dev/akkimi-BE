@@ -8,8 +8,8 @@ import akkimi_BE.aja.entity.SavingGoal;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.SavingGoalRepository;
 import akkimi_BE.aja.repository.UserRepository;
-import global.exception.CustomException;
-import global.exception.HttpErrorCode;
+import akkimi_BE.aja.global.exception.CustomException;
+import akkimi_BE.aja.global.exception.HttpErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,10 +49,10 @@ public class SavingGoalService {
     @Transactional
     public  Long createSavingGoal(User user, CreateSavingGoalRequestDto requestDto) {
         if (requestDto.getStartDate().isAfter(requestDto.getEndDate())) {
-            throw new CustomException(HttpErrorCode.BAD_REQUSET);
+            throw new CustomException(HttpErrorCode.BAD_REQUST);
         }
         if (savingGoalRepository.existsByUser_UserIdAndIsCurrentGoalTrue(user.getUserId())) {
-            throw new CustomException(HttpErrorCode.BAD_REQUSET);
+            throw new CustomException(HttpErrorCode.BAD_REQUST);
         }
 
         SavingGoal saved = savingGoalRepository.save(
@@ -73,9 +73,9 @@ public class SavingGoalService {
     public void updateGoal(User user, Long goalId, UpdateSavingGoalRequestDto requestDto) {
         SavingGoal goal = savingGoalRepository
                 .findByGoalIdAndUser_UserId(goalId, user.getUserId())
-                .orElseThrow(()-> new CustomException(HttpErrorCode.BAD_REQUSET));
+                .orElseThrow(()-> new CustomException(HttpErrorCode.BAD_REQUST));
         if (requestDto.getStartDate().isAfter(requestDto.getEndDate())) {
-            throw new CustomException(HttpErrorCode.BAD_REQUSET);
+            throw new CustomException(HttpErrorCode.BAD_REQUST);
         }
         goal.updatePartial(requestDto.getPurposeBudget(),requestDto.getPurpose(),requestDto.getStartDate(),requestDto.getEndDate());
     }
