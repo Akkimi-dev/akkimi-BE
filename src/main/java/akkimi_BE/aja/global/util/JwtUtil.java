@@ -1,5 +1,7 @@
 package akkimi_BE.aja.global.util;
 
+import akkimi_BE.aja.global.exception.AuthenticationErrorCode;
+import akkimi_BE.aja.global.exception.CustomException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -70,27 +72,33 @@ public class JwtUtil {
     /**
      * JWT 토큰 유효성 검증
      * @param token 검증할 토큰
-     * @return 유효하면 true, 무효하면 false
+     * @throws CustomException 토큰이 유효하지 않을 경우
      */
-    public boolean validateToken(String token) {
+    public void validateToken(String token) {
         try {
             Jwts.parserBuilder()
                     .setSigningKey(getSigningKey())
                     .build()
                     .parseClaimsJws(token);
-            return true;
         } catch (ExpiredJwtException e) {
             log.error("만료된 JWT 토큰: {}", e.getMessage());
+            throw new CustomException(AuthenticationErrorCode.EXPIRED_TOKEN);
         } catch (UnsupportedJwtException e) {
             log.error("지원되지 않는 JWT 토큰: {}", e.getMessage());
+            throw new CustomException(AuthenticationErrorCode.TOKEN_UNSUPPORTED);
         } catch (MalformedJwtException e) {
             log.error("잘못된 형식의 JWT 토큰: {}", e.getMessage());
+            throw new CustomException(AuthenticationErrorCode.TOKEN_MALFORMED);
         } catch (SignatureException e) {
             log.error("JWT 서명 검증 실패: {}", e.getMessage());
+            throw new CustomException(AuthenticationErrorCode.TOKEN_SIGNATURE_ERROR);
         } catch (IllegalArgumentException e) {
             log.error("JWT 토큰이 비어있음: {}", e.getMessage());
+            throw new CustomException(AuthenticationErrorCode.TOKEN_EMPTY);
+        } catch (Exception e) {
+            log.error("JWT 토큰 검증 중 오류: {}", e.getMessage());
+            throw new CustomException(AuthenticationErrorCode.TOKEN_PARSING_ERROR);
         }
-        return false;
     }
 
     /**
@@ -134,8 +142,12 @@ public class JwtUtil {
     // JwtUtil에 추가
 
     public boolean validateRefreshToken(String token) {
-        if (!validateToken(token)) return false;
-        return "REFRESH".equalsIgnoreCase(getTokenType(token));
+        try {
+            validateToken(token);
+            return "REFRESH".equalsIgnoreCase(getTokenType(token));
+        } catch (CustomException e) {
+            return false;
+        }
     }
 
     public String getSocialIdFromRefresh(String token) {

@@ -83,6 +83,7 @@ public class OAuthService {
                         .socialId(user.getSocialId())
                         .role(user.getRole().name())
                         .socialType(user.getSocialType().name())
+                        .isSetup(user.getIsSetup())
                         .build())
                 .build();
     }
@@ -189,6 +190,7 @@ public class OAuthService {
                         .nickname(user.getNickname())
                         .role(user.getRole().name())
                         .socialType(user.getSocialType().name())
+                        .isSetup(user.getIsSetup())
                         .build())
                 .build();
     }

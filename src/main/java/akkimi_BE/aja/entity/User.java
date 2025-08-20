@@ -57,6 +57,10 @@ public class User extends BaseTimeEntity implements UserDetails {
     @Column(name = "region")
     private String region;
 
+    @Column(name = "is_setup", nullable = false)
+    @Builder.Default
+    private Boolean isSetup = false;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.singletonList(new SimpleGrantedAuthority(role.name()));
@@ -74,6 +78,10 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     public void updateNickname(String nickname) {
         this.nickname = nickname;
+        // 닉네임과 캐릭터가 모두 설정되면 isSetup을 true로 변경
+        if (this.nickname != null && this.character != null) {
+            this.isSetup = true;
+        }
     }
 
     public void changeCurrentMaltu(Long maltuId) {
@@ -82,5 +90,14 @@ public class User extends BaseTimeEntity implements UserDetails {
 
     public void updateRegion(String region) {
         this.region = region;
+    }
+
+    public void updateCharacter(Character character) {
+        this.character = character;
+
+        // 닉네임과 캐릭터가 모두 설정되면 isSetup = true
+        if (this.nickname != null && this.character != null) {
+            this.isSetup = true;
+        }
     }
 }

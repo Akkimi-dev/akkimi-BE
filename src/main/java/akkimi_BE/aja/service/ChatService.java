@@ -4,6 +4,7 @@ import akkimi_BE.aja.dto.request.ChatRequestDto;
 import akkimi_BE.aja.dto.response.ChatHistoryResponseDto;
 import akkimi_BE.aja.entity.ChatMessage;
 import akkimi_BE.aja.entity.Speaker;
+import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.global.exception.CustomException;
 import akkimi_BE.aja.global.exception.HttpErrorCode;
@@ -38,9 +39,9 @@ public class ChatService {
     private final ChatClient chatClient;
     private final MaltuService maltuService;
     private final ChatMessageRepository chatMessageRepository;
+    private final FeedbackPromptBuilder feedbackPromptBuilder;
 
     // 최근 대화 조회(limit 없으면 30개 기본값)
-    @Transactional(readOnly = true)
     public ChatHistoryResponseDto getMessages(User user, Integer limit, Long beforeId) {
         int size = Math.max(1, Math.min(limit == null ? 30 : limit, 100));
 
@@ -55,18 +56,25 @@ public class ChatService {
         DateTimeFormatter timeHeaderFmt = DateTimeFormatter.ofPattern("a h:mm", Locale.KOREA);
 
         List<ChatHistoryResponseDto.MessageDto> items = new ArrayList<>(desc.size());
-        ChatMessage prev = null;
 
+        ChatMessage prev = null;
         for (ChatMessage cur : desc) {
             LocalDateTime nowTs = cur.getCreatedAt();
-            boolean showDate = (prev == null) ||
-                    !prev.getCreatedAt().toLocalDate().equals(nowTs.toLocalDate());
 
+            boolean showDate = false;
             boolean showTime = false;
-            if (!showDate) {
-                long gapMin = Duration.between(prev.getCreatedAt(), nowTs).toMinutes();
-                showTime = gapMin >= 60; // 60분 이상만 시간 헤더
+
+            if (prev != null) {
+                // 날짜가 바뀌면 날짜 라벨
+                showDate = !prev.getCreatedAt().toLocalDate().equals(nowTs.toLocalDate());
+
+                // 같은 날짜이면서 60분 이상 간격이면 시간 라벨
+                if (!showDate) {
+                    long gapMin = Duration.between(prev.getCreatedAt(), nowTs).toMinutes();
+                    showTime = gapMin >= 60;
+                }
             }
+            // prev == null (첫 메시지)는 showDate=false, showTime=false 무조건 라벨 x
 
             items.add(ChatHistoryResponseDto.MessageDto.builder()
                     .chatId(cur.getChatId())
@@ -84,7 +92,7 @@ public class ChatService {
             prev = cur;
         }
 
-        Long nextBeforeId = hasMore ? desc.get(0).getChatId() : null;
+        Long nextBeforeId = hasMore ? desc.get(desc.size() - 1).getChatId() : null;
 
         return ChatHistoryResponseDto.builder()
                 .messages(items)
@@ -230,6 +238,34 @@ public class ChatService {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Transactional(readOnly = true)
+    public void sendConsumptionFeedBack(User user, TodayConsumption consumption) {
+        Long maltuId = user.getCurrentMaltuId();
+
+        String systemPrompt = maltuService.resolveMaltuPrompt(user);
+        String userMessage = feedbackPromptBuilder.buildUserUtterance(consumption);
+        ChatMessage saveUser = chatMessageRepository.save(
+                ChatMessage.of(user, maltuId, Speaker.USER, userMessage, true)
+        );
+
+        String assistantReply;
+        try {
+            assistantReply = chatClient
+                    .prompt()
+                    .system(systemPrompt)
+                    .user(userMessage)
+                    .options(ChatOptions.builder().temperature(0.4).build())
+                    .call()
+                    .content();
+        }catch (org.springframework.ai.retry.NonTransientAiException e){
+            assistantReply = "지금은 피드백을 생성하기 어려워요. 잠시 후 다시 시도해주세요";
+        }
+
+        chatMessageRepository.save(
+                ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, true)
+        );
     }
 
     private String safe(String s) {

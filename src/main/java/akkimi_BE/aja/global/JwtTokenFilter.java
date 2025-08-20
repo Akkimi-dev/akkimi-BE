@@ -3,12 +3,17 @@ package akkimi_BE.aja.global;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.UserRepository;
 import akkimi_BE.aja.global.util.JwtUtil;
+import akkimi_BE.aja.global.exception.AuthenticationErrorCode;
+import akkimi_BE.aja.global.exception.CustomException;
+import akkimi_BE.aja.global.response.CustomErrorResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -26,6 +31,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void init() {
@@ -69,9 +75,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String token = getTokenFromRequest(request);
 
-        if(token != null && jwtUtil.validateToken(token)) {
-            String socialId = jwtUtil.getSocialIdFromToken(token);
+        // 토큰이 없는 경우 - 다음 필터로 진행 (공개 API 접근 가능)
+        if(token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
+        // 토큰이 있는 경우 - 검증 수행
+        try {
+            jwtUtil.validateToken(token);
+            
+            // 토큰이 유효한 경우 - 인증 정보 설정
+            String socialId = jwtUtil.getSocialIdFromToken(token);
             if(socialId != null) {
                 Optional<User> user = userRepository.findBySocialId(socialId);
                 if(user.isPresent()) {
@@ -82,8 +97,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                                     user.get().getAuthorities());
 
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    // 토큰은 유효하지만 사용자를 찾을 수 없는 경우
+                    log.warn("토큰의 사용자를 찾을 수 없음: socialId={}", socialId);
+                    sendErrorResponse(response, new CustomException(AuthenticationErrorCode.USER_NOT_FOUND_BY_TOKEN));
+                    return;
                 }
             }
+        } catch (CustomException e) {
+            // 토큰 검증 실패 시 바로 에러 응답 반환
+            log.warn("토큰 검증 실패: {}", e.getMessage());
+            sendErrorResponse(response, e);
+            return;
         }
 
         filterChain.doFilter(request, response);
@@ -99,6 +124,27 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         return null;
+    }
+
+    /**
+     * CustomException을 받아서 에러 응답을 직접 생성하여 반환
+     * @param response HttpServletResponse 객체
+     * @param exception CustomException 객체
+     * @throws IOException
+     */
+    private void sendErrorResponse(HttpServletResponse response, CustomException exception) throws IOException {
+        int statusCode = exception.getErrorCode().getHttpStatus().value();
+        String errorMessage = exception.getMessage();
+        
+        response.setStatus(statusCode);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        
+        CustomErrorResponse errorResponse = CustomErrorResponse.of(statusCode, errorMessage);
+        String jsonResponse = objectMapper.writeValueAsString(errorResponse);
+        
+        response.getWriter().write(jsonResponse);
+        response.getWriter().flush();
     }
 }
 
