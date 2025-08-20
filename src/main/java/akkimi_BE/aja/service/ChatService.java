@@ -163,24 +163,32 @@ public class ChatService {
                         .doOnError(ex -> {
                             if (ex instanceof NonTransientAiException) {
                                 log.warn("SSE NonTransientAiException: {}", ex.getMessage());
-                                quotaFriendlyFinish(emitter, user, userMessage, sb);
+                                String fallback = "현재 AI 할당량이 초과되어 임시로 답변을 생성할 수 없어요. 잠시 후 다시 시도해 주세요 🙏";
+                                sb.append(fallback);
+                                sendEvent(emitter, "message", fallback);
                             } else {
-                                log.warn("SSE stream error: {}", ex.getMessage(), ex);
+                                log.warn("SSE stream error: {}", ex.getMessage());
                                 sendEvent(emitter, "error", "{\"message\":\"stream_failed\"}");
-                                emitter.completeWithError(ex);
                             }
                         })
-                        .doOnComplete(() -> {
+                        .doFinally(signal -> {
+                            // 무조건 실행되는 블록 - 정상이든 에러든 무조건 저장
+                            String finalContent = sb.toString();
+                            if (finalContent.isEmpty()) {
+                                finalContent = "응답 생성 실패";
+                            }
+                            
                             try {
                                 ChatMessage savedBot = chatMessageRepository.save(
-                                        ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, sb.toString(), false)
+                                        ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, finalContent, false)
                                 );
                                 sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBot.getChatId() + "}");
-                                emitter.complete();
-                            } catch (DataAccessException e) { //저장 실패 -> 프론트 무한 대기 x
-                                log.error("Persist failed: {}", e.getMessage(), e);
+                                log.info("Bot response saved: {} chars", finalContent.length());
+                            } catch (Exception e) {
+                                log.error("Failed to save bot response", e);
                                 sendEvent(emitter, "error", "{\"message\":\"persist_failed\"}");
-                                emitter.completeWithError(e);
+                            } finally {
+                                emitter.complete();
                             }
                         })
                         .subscribe();
@@ -214,29 +222,12 @@ public class ChatService {
         emitter.complete();
     }
 
-    /** 스트림 진행 중 doOnError에서 NonTransientAiException을 만났을 때 동일한 마무리 처리. */
-    private void quotaFriendlyFinish(SseEmitter emitter, User user, ChatMessage userMessage, StringBuilder sb) {
-        String fallback = "현재 AI 할당량이 초과되어 임시로 답변을 생성할 수 없어요. 잠시 후 다시 시도해 주세요 🙏";
-        sb.append(fallback);
-        try {
-            sendEvent(emitter, "message", fallback);
-            ChatMessage savedBot = chatMessageRepository.save(
-                    ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, sb.toString(), false)
-            );
-            sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBot.getChatId() + "}");
-            emitter.complete();
-        } catch (Exception persistEx) {
-            log.error("Failed to persist fallback message: {}", persistEx.getMessage(), persistEx);
-            sendEvent(emitter, "error", "{\"message\":\"internal_error\"}");
-            emitter.completeWithError(persistEx);
-        }
-    }
 
     private void sendEvent(SseEmitter emitter, String name, String data) {
         try {
             emitter.send(SseEmitter.event().name(name).data(data));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            log.debug("Client disconnected: {}", e.getMessage());
         }
     }
 

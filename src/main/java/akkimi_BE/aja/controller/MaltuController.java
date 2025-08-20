@@ -7,6 +7,7 @@ import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.service.MaltuService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,6 +18,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/maltus")
+@Tag(name = "말투 API")
 public class MaltuController {
     private final MaltuService maltuService;
 
