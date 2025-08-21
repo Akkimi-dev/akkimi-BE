@@ -114,8 +114,7 @@ public class ChatService {
         return messageId;
     }
 
-    // 2) 스트림 대화 답변 받기
-    @Transactional
+    // 2) 스트림 대화 답변 받기 - 트랜잭션 제거 (SSE 장시간 연결로 인한 DB 커넥션 고갈 방지)
     public SseEmitter streamReply(User user, Long messageId) {
         ChatMessage userMessage = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(HttpErrorCode.MESSAGE_NOT_FOUND));
@@ -179,10 +178,8 @@ public class ChatService {
                             }
                             
                             try {
-                                ChatMessage savedBot = chatMessageRepository.save(
-                                        ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, finalContent, false)
-                                );
-                                sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBot.getChatId() + "}");
+                                Long savedBotId = saveBotMessage(user, userMessage.getMaltuId(), finalContent);
+                                sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
                                 log.info("Bot response saved: {} chars", finalContent.length());
                             } catch (Exception e) {
                                 log.error("Failed to save bot response", e);
@@ -215,10 +212,8 @@ public class ChatService {
         sb.append(fallback);
         sendEvent(emitter, "message", fallback);
 
-        ChatMessage savedBot = chatMessageRepository.save(
-                ChatMessage.of(user, userMessage.getMaltuId(), Speaker.BOT, sb.toString(), false)
-        );
-        sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBot.getChatId() + "}");
+        Long savedBotId = saveBotMessage(user, userMessage.getMaltuId(), sb.toString());
+        sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
         emitter.complete();
     }
 
@@ -261,6 +256,15 @@ public class ChatService {
 
     private String safe(String s) {
         return s == null ? "" : s;
+    }
+
+    // 봇 메시지 저장 (트랜잭션 필요)
+    @Transactional
+    public Long saveBotMessage(User user, Long maltuId, String content) {
+        ChatMessage savedBot = chatMessageRepository.save(
+                ChatMessage.of(user, maltuId, Speaker.BOT, content, false)
+        );
+        return savedBot.getChatId();
     }
 }
 
