@@ -28,7 +28,7 @@ public class Maltu extends BaseTimeEntity {
 
     //공유 여부
     @Column(name = "is_public", nullable = false)
-    private Boolean isPublic = false;
+    private Boolean isPublic = true;
 
     //말투 프롬프트 텍스트
     @Column(columnDefinition = "LONGTEXT")
