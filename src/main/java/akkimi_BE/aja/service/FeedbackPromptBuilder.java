@@ -14,21 +14,28 @@ import java.util.Locale;
 public class FeedbackPromptBuilder {
     private static final NumberFormat money = NumberFormat.getInstance(Locale.KOREA);
 
-    public String buildUserUtterance(TodayConsumption consumption) {
+    public String buildUserUtterance(TodayConsumption c) {
+        String category = safe(c.getCategory());
+        String itemName = safe(c.getItemName());
+        String desc = safe(c.getDescription());
+        String amountStr = (c.getAmount() == null) ? "-" : money.format(c.getAmount()) + "원";
+
         StringBuilder sb = new StringBuilder();
+        sb.append("[오늘 소비 기록]\n")
+                .append("카테고리: ").append(category.isEmpty() ? "-" : category).append("\n")
+                .append("이름: ").append(itemName.isEmpty() ? "-" : itemName).append("\n")
+                .append("금액: ").append(amountStr).append("\n")
+                .append("변명: ").append(desc.isEmpty() ? "-" : desc).append("\n\n")
+                .append("위 소비 내역을 바탕으로, 오늘의 소비 습관에 대한 코칭 피드백을 간결하게 알려주세요.");
 
-        sb.append("오늘")
-                .append(consumption.getCategory()).append("로 ")
-                .append(consumption.getItemName()).append("에 ")
-                .append(consumption.getAmount()).append("원 썼어.");
-
-        if (consumption.getDescription() != null && !consumption.getDescription().isEmpty()) {
-            sb.append("변명:").append(consumption.getDescription());
-        }
-
-        sb.append("\"위 소비 내역을 바탕으로, 오늘의 소비 습관에 대한 코칭 피드백을 간결하게 알려주세요.\"");
         return sb.toString();
     }
+
+    private String safe(String s) {
+        return s == null ? "" : s.trim();
+    }
+}
+
     //TODO 정후 : 일일소비생성 dto로 받아와 프롬프트 수정하기. 아래는 예시
 //    public String buildUserMessage(DailyConsumptionCreateRequestDto req) {
 //        var nf = NumberFormat.getInstance(Locale.KOREA);
@@ -59,4 +66,4 @@ public class FeedbackPromptBuilder {
 //        return sb.toString();
 //    }
     
-}
+

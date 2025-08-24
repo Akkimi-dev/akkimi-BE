@@ -224,8 +224,8 @@ public class ChatService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public void sendConsumptionFeedBack(User user, TodayConsumption consumption) {
+    @Transactional
+    public String sendConsumptionFeedBack(User user, TodayConsumption consumption) {
         Long maltuId = user.getCurrentMaltuId();
 
         String systemPrompt = maltuService.resolveMaltuPrompt(user);
@@ -250,6 +250,7 @@ public class ChatService {
         chatMessageRepository.save(
                 ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, true)
         );
+        return assistantReply;
     }
 
     // 봇 메시지 저장 (트랜잭션 필요)
