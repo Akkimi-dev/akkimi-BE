@@ -66,7 +66,7 @@ public class TodayConsumptionController {
     @Operation(summary = "일 소비 내역 조회", description = "특정 날짜의 모든 소비 내역을 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/goals/{goalId}/days")
-    public List<TodayConsumptionResponseDto> getDay(
+    public List<TodayConsumptionFeedbackResponseDto> getDay(
             @AuthenticationPrincipal User user,
             @PathVariable Long goalId,
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date

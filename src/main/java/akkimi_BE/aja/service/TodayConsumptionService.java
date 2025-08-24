@@ -102,7 +102,7 @@ public class TodayConsumptionService {
         todayConsumptionRepository.delete(c);
     }
 
-    public List<TodayConsumptionResponseDto> getDay(User user, Long goalId, LocalDate date) {
+    public List<TodayConsumptionFeedbackResponseDto> getDay(User user, Long goalId, LocalDate date) {
         SavingGoal goal = savingGoalRepository.findByGoalIdAndUser_UserId(goalId,user.getUserId())
                 .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED));
         validateDateInRange(date, goal);
@@ -113,7 +113,32 @@ public class TodayConsumptionService {
         if (todayDate == null) return List.of();
 
         return todayDate.getConsumptions().stream()
-                .map(TodayConsumptionMapper::toDto)
+                .map(consumption -> {
+                    // 각 소비에 대한 피드백 조회
+                    ChatMessage feedbackMessage = chatService.findFeedbackMessage(consumption.getConsumptionId());
+                    
+                    // 피드백 DTO 생성
+                    TodayConsumptionFeedbackResponseDto.ChatMessageDto feedbackDto = null;
+                    if (feedbackMessage != null) {
+                        feedbackDto = TodayConsumptionFeedbackResponseDto.ChatMessageDto.builder()
+                                .messageId(feedbackMessage.getChatId())
+                                .feedback(feedbackMessage.getMessage())
+                                .build();
+                    }
+                    
+                    // 응답 DTO 생성
+                    return TodayConsumptionFeedbackResponseDto.builder()
+                            .consumptionId(consumption.getConsumptionId())
+                            .todayDateId(consumption.getTodayDate().getTodayDateId())
+                            .goalId(consumption.getTodayDate().getGoal().getGoalId())
+                            .date(consumption.getTodayDate().getTodayDate())
+                            .category(consumption.getCategory())
+                            .itemName(consumption.getItemName())
+                            .amount(consumption.getAmount())
+                            .description(consumption.getDescription())
+                            .feedback(feedbackDto)
+                            .build();
+                })
                 .toList();
     }
 
