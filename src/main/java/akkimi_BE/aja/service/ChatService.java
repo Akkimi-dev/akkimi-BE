@@ -108,7 +108,7 @@ public class ChatService {
 
         //유저 메시지 저장
         Long messageId = chatMessageRepository.save(
-                ChatMessage.of(user, maltuId, Speaker.USER, chatRequestDto.getMessage(), false)
+                ChatMessage.of(user, maltuId, Speaker.USER, chatRequestDto.getMessage(), false, null)
         ).getChatId();
 
         return messageId;
@@ -231,7 +231,7 @@ public class ChatService {
         String systemPrompt = maltuService.resolveMaltuPrompt(user);
         String userMessage = feedbackPromptBuilder.buildUserUtterance(consumption);
         ChatMessage saveUser = chatMessageRepository.save(
-                ChatMessage.of(user, maltuId, Speaker.USER, userMessage, true)
+                ChatMessage.of(user, maltuId, Speaker.USER, userMessage, true, consumption.getConsumptionId())
         );
 
         String assistantReply;
@@ -248,19 +248,23 @@ public class ChatService {
         }
 
         chatMessageRepository.save(
-                ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, true)
+                ChatMessage.of(user, maltuId, Speaker.BOT, assistantReply, true, consumption.getConsumptionId())
         );
         return assistantReply;
     }
 
-    // 봇 메시지 저장 (트랜잭션 필요)
+    // 챗봇 메시지 저장
     @Transactional
     public Long saveBotMessage(User user, Long maltuId, String content) {
         ChatMessage savedBot = chatMessageRepository.save(
-                ChatMessage.of(user, maltuId, Speaker.BOT, content, false)
+                ChatMessage.of(user, maltuId, Speaker.BOT, content, false, null)
         );
         return savedBot.getChatId();
     }
 
+    // 일일소비에서 해당 소비의 피드백 받아오기(챗봇만)
+    public ChatMessage findFeedbackMessage(Long consumptionId) {
+        return chatMessageRepository.findByConsumptionId(consumptionId);
+    }
 }
 

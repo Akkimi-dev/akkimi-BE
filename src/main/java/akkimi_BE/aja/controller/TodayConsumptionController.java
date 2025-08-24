@@ -3,10 +3,7 @@ package akkimi_BE.aja.controller;
 
 import akkimi_BE.aja.dto.request.CreateTodayConsumptionRequestDto;
 import akkimi_BE.aja.dto.request.UpdateTodayConsumptionDto;
-import akkimi_BE.aja.dto.response.CreateConsumptionResponseDto;
-import akkimi_BE.aja.dto.response.DayConsumptionSummaryDto;
-import akkimi_BE.aja.dto.response.MonthConsumptionSummaryDto;
-import akkimi_BE.aja.dto.response.TodayConsumptionResponseDto;
+import akkimi_BE.aja.dto.response.*;
 import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.global.response.CommonResponse;
@@ -114,7 +111,7 @@ public class TodayConsumptionController {
     @Operation(summary = "소비 내역 단건 조회", description = "소비 내역 ID로 단건 상세를 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/consumptions/{consumptionId}")
-    public TodayConsumptionResponseDto getOne(
+    public TodayConsumptionFeedbackResponseDto getOne(
             @AuthenticationPrincipal User user,
             @PathVariable Long consumptionId
     ) {

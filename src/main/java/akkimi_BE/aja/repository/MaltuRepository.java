@@ -18,7 +18,7 @@ public interface MaltuRepository extends JpaRepository<Maltu, Long> {
     Integer countByIsDefaultTrue();
 
     //공개된 말투 리스트 조회(기본 말투 포함x)
-    List<Maltu> findByIsPublicTrueAndIsDefaultFalseOrderByCreatedAtDesc();
+    List<Maltu> findByIsPublicTrueOrderByCreatedAtDesc();
 
     //기본 말투 리스트 조회
     List<Maltu> findByIsDefaultTrue();
