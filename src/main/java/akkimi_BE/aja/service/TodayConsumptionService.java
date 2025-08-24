@@ -2,6 +2,7 @@ package akkimi_BE.aja.service;
 
 import akkimi_BE.aja.dto.request.CreateTodayConsumptionRequestDto;
 import akkimi_BE.aja.dto.request.UpdateTodayConsumptionDto;
+import akkimi_BE.aja.dto.response.CreateConsumptionResponseDto;
 import akkimi_BE.aja.entity.SavingGoal;
 import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.TodayDate;
@@ -36,7 +37,7 @@ public class TodayConsumptionService {
     private final ChatService chatService;
 
     @Transactional
-    public Long create(User user, Long goalId, LocalDate date, CreateTodayConsumptionRequestDto createTodayConsumptionRequestDto) {
+    public CreateConsumptionResponseDto create(User user, Long goalId, LocalDate date, CreateTodayConsumptionRequestDto createTodayConsumptionRequestDto) {
         SavingGoal goal = savingGoalRepository.findByGoalIdAndUser_UserId(goalId, user.getUserId())
                 .orElseThrow(()-> new CustomException(HttpErrorCode.UNAUTHORIZED));
 
@@ -59,9 +60,12 @@ public class TodayConsumptionService {
         goal.increaseTotal(createTodayConsumptionRequestDto.getAmount());
 
 
-        try {chatService.sendConsumptionFeedBack(user,saved);} catch (Exception ignore) {}
+       String feedback = chatService.sendConsumptionFeedBack(user,saved);
 
-        return saved.getConsumptionId();
+        return CreateConsumptionResponseDto.builder()
+                .consumptionId(saved.getConsumptionId())
+                .feedback(feedback)
+                .build();
 
     }
 
@@ -182,6 +186,17 @@ public class TodayConsumptionService {
         if(date.isBefore(goal.getStartDate()) || date.isAfter(goal.getEndDate())) {
             throw new CustomException(HttpErrorCode.UNAUTHORIZED);
         }
+    }
+    public TodayConsumptionResponseDto getOne(User user, Long consumptionId) {
+        TodayConsumption c = todayConsumptionRepository.findById(consumptionId)
+                .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED)); // 존재하지 않음 or 접근 불가일 때 동일 코드 사용
+
+        // 소유자 검증
+        if (!c.getTodayDate().getGoal().getUser().getUserId().equals(user.getUserId())) {
+            throw new CustomException(HttpErrorCode.UNAUTHORIZED);
+        }
+
+        return TodayConsumptionMapper.toDto(c);
     }
 
 }
