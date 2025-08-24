@@ -252,10 +252,6 @@ public class ChatService {
         );
     }
 
-    private String safe(String s) {
-        return s == null ? "" : s;
-    }
-
     // 봇 메시지 저장 (트랜잭션 필요)
     @Transactional
     public Long saveBotMessage(User user, Long maltuId, String content) {
