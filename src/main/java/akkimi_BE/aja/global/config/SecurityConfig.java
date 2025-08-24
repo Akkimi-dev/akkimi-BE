@@ -127,7 +127,8 @@ public class SecurityConfig {
                 "http://localhost:3000",    // React 개발 서버
                 "http://localhost:5173",
                 "http://localhost:8080",     // 같은 서버
-                "https://yeogaeng.shop"
+                "https://yeogaeng.shop",
+                "https://akkimi.shop"
         ));
 
         // 허용할 HTTP 메서드

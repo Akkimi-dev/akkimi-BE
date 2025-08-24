@@ -6,6 +6,7 @@ import akkimi_BE.aja.dto.response.MaltuResponseDto;
 import akkimi_BE.aja.entity.Maltu;
 import akkimi_BE.aja.entity.User;
 import akkimi_BE.aja.repository.MaltuRepository;
+import akkimi_BE.aja.repository.UserRepository;
 import akkimi_BE.aja.global.exception.CustomException;
 import akkimi_BE.aja.global.exception.HttpErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.List;
 public class MaltuService {
 
     private final MaltuRepository maltuRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public Long createMaltu(User authUser, CreateMaltuRequestDto createMaltuRequestDto) {
@@ -107,14 +109,18 @@ public class MaltuService {
     말투 설정 프롬프트
     */
     public String resolveMaltuPrompt(User user) {
-        Long maltuId = user.getCurrentMaltuId();
-        String characterName = user.getCharacter() != null ? user.getCharacter().getCharacterName() : null;
+        // User를 다시 조회하여 Character를 함께 가져옴
+        User freshUser = userRepository.findById(user.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+        
+        Long maltuId = freshUser.getCurrentMaltuId();
+        String characterName = freshUser.getCharacter() != null ? freshUser.getCharacter().getCharacterName() : null;
         String maltuPrompt = "";
         String characterPrompt = "";
 
         if (maltuId != null) {
             maltuPrompt = maltuRepository.findById(maltuId)
-                    .filter(m -> m.getCreator().getUserId().equals(user.getUserId()) || Boolean.TRUE.equals(m.getIsPublic()))
+                    .filter(m -> m.getCreator().getUserId().equals(freshUser.getUserId()) || Boolean.TRUE.equals(m.getIsPublic()))
                     .map(Maltu::getPrompt)
                     .orElse(null);
         }
