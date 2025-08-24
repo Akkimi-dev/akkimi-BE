@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -30,9 +31,9 @@ public class SavingGoalController {
     @Operation(summary = "현재 진행 중인 목표 조회", description = "사용자의 현재 진행 중인 절약 목표를 조회합니다.")
     @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/goals/current")
-    public CommonResponse<SavingGoalResponseDto> getCurrentGoal(@AuthenticationPrincipal User user) {
+    public Optional<SavingGoalResponseDto> getCurrentGoal(@AuthenticationPrincipal User user) {
         SavingGoalResponseDto dto = savingGoalService.getCurrentGoal(user);
-        return CommonResponse.of(200,"요청이 성공적으로 처리되었습니다.",dto);
+        return Optional.ofNullable(dto);
     }
 
     @Operation(summary = "전체 목표 목록 조회", description = "사용자의 모든 절약 목표를 조회합니다.")
