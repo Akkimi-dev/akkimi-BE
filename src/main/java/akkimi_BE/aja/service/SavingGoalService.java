@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,18 +25,15 @@ public class SavingGoalService {
     private final SavingGoalRepository savingGoalRepository;
 
     public SavingGoalResponseDto getCurrentGoal(User user) {
-        SavingGoal goal = savingGoalRepository
-                .findByUser_UserIdAndIsCurrentGoalTrue(user.getUserId())
-                .orElseThrow(()-> new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND));
-        return  SavingGoalResponseDto.from(goal);
-
+        Optional<SavingGoal> goal = savingGoalRepository
+                .findByUser_UserIdAndIsCurrentGoalTrue(user.getUserId());
+        return goal.map(SavingGoalResponseDto::from).orElse(null);
     }
 
     public List<SavingGoalResponseDto> getAllGoals(User user) {
         return savingGoalRepository.findAllByUser_UserId(user.getUserId()).stream()
                 .map(SavingGoalResponseDto::from)
                 .toList();
-
     }
 
     public SavingGoalResponseDto getGoalById(User user, Long goalId) {
@@ -84,5 +82,6 @@ public class SavingGoalService {
         SavingGoal goal = savingGoalRepository
                 .findByGoalIdAndUser_UserId(goalId, user.getUserId())
                 .orElseThrow(()->new CustomException(HttpErrorCode.SAVING_GOAL_NOT_FOUND));
+        savingGoalRepository.delete(goal);
     }
 }
