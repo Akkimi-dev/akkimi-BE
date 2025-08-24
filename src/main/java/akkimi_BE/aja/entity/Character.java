@@ -15,6 +15,6 @@ public class Character extends BaseTimeEntity {
     @Column(name = "character_id")
     private Long characterId;
 
-    @Column(name = "character_name", nullable = false, length = 50, unique = true)
+    @Column(name = "character_name", length = 50, unique = true)
     private String characterName;
 }
