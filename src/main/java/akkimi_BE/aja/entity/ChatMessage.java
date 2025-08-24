@@ -32,13 +32,17 @@ public class ChatMessage extends BaseTimeEntity {
     @Column(name = "is_feedback", nullable = false)
     private Boolean isFeedback;
 
-    public static ChatMessage of(User user, Long maltuId, Speaker speaker, String message, Boolean isFeedback) {
+    @Column(name = "consumption_id")
+    private Long consumptionId; //소비내역 생성 때 해당되는 유저, 봇 메시지에 저장
+
+    public static ChatMessage of(User user, Long maltuId, Speaker speaker, String message, Boolean isFeedback, Long consumptionId) {
         return ChatMessage.builder()
                 .user(user)
                 .maltuId(maltuId)
                 .speaker(speaker)
                 .message(message)
                 .isFeedback(isFeedback)
+                .consumptionId(consumptionId)
                 .build();
     }
 }

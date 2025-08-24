@@ -2,7 +2,8 @@ package akkimi_BE.aja.service;
 
 import akkimi_BE.aja.dto.request.CreateTodayConsumptionRequestDto;
 import akkimi_BE.aja.dto.request.UpdateTodayConsumptionDto;
-import akkimi_BE.aja.dto.response.CreateConsumptionResponseDto;
+import akkimi_BE.aja.dto.response.*;
+import akkimi_BE.aja.entity.ChatMessage;
 import akkimi_BE.aja.entity.SavingGoal;
 import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.TodayDate;
@@ -16,9 +17,7 @@ import akkimi_BE.aja.repository.TodayDateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import akkimi_BE.aja.dto.response.TodayConsumptionResponseDto;
-import akkimi_BE.aja.dto.response.DayConsumptionSummaryDto;
-import akkimi_BE.aja.dto.response.MonthConsumptionSummaryDto;
+
 import static akkimi_BE.aja.mapper.TodayConsumptionMapper.toDto;
 
 import java.time.LocalDate;
@@ -187,7 +186,7 @@ public class TodayConsumptionService {
             throw new CustomException(HttpErrorCode.UNAUTHORIZED);
         }
     }
-    public TodayConsumptionResponseDto getOne(User user, Long consumptionId) {
+    public TodayConsumptionFeedbackResponseDto getOne(User user, Long consumptionId) {
         TodayConsumption c = todayConsumptionRepository.findById(consumptionId)
                 .orElseThrow(() -> new CustomException(HttpErrorCode.UNAUTHORIZED)); // 존재하지 않음 or 접근 불가일 때 동일 코드 사용
 
@@ -196,7 +195,29 @@ public class TodayConsumptionService {
             throw new CustomException(HttpErrorCode.UNAUTHORIZED);
         }
 
-        return TodayConsumptionMapper.toDto(c);
+        ChatMessage feedbackMessage = chatService.findFeedbackMessage(consumptionId);
+        
+        // 피드백 DTO 생성
+        TodayConsumptionFeedbackResponseDto.ChatMessageDto feedbackDto = null;
+        if (feedbackMessage != null) {
+            feedbackDto = TodayConsumptionFeedbackResponseDto.ChatMessageDto.builder()
+                    .messageId(feedbackMessage.getChatId())
+                    .feedback(feedbackMessage.getMessage())
+                    .build();
+        }
+
+        // 응답 DTO 생성
+        return TodayConsumptionFeedbackResponseDto.builder()
+                .consumptionId(c.getConsumptionId())
+                .todayDateId(c.getTodayDate().getTodayDateId())
+                .goalId(c.getTodayDate().getGoal().getGoalId())
+                .date(c.getTodayDate().getTodayDate())
+                .category(c.getCategory())
+                .itemName(c.getItemName())
+                .amount(c.getAmount())
+                .description(c.getDescription())
+                .feedback(feedbackDto)
+                .build();
     }
 
 }
