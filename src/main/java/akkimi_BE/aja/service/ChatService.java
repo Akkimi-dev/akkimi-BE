@@ -14,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.retry.NonTransientAiException;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,6 +99,7 @@ public class ChatService {
                 .nextBeforeId(nextBeforeId)
                 .build();
     }
+
 
     // 1) 메시지 저장
     @Transactional
@@ -205,7 +205,6 @@ public class ChatService {
 
 
 
-
     /** 요금/쿼터 초과 등 비재시도 오류일 때 사용자 친절 메시지로 종료(스트림 생성 단계에서 발생한 경우). */
     private void handleQuotaFallback(SseEmitter emitter, User user, ChatMessage userMessage, StringBuilder sb) {
         String fallback = "현재 AI 할당량이 초과되어 임시로 답변을 생성할 수 없어요. 잠시 후 다시 시도해 주세요 🙏";
@@ -216,7 +215,6 @@ public class ChatService {
         sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
         emitter.complete();
     }
-
 
     private void sendEvent(SseEmitter emitter, String name, String data) {
         try {
@@ -266,5 +264,6 @@ public class ChatService {
         );
         return savedBot.getChatId();
     }
+
 }
 
