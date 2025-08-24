@@ -37,10 +37,10 @@ public class MaltuController {
     }
 
     @GetMapping("/public/list")
-    @Operation(summary = "공개 말투 목록 조회(기본 말투 포함x)", description = "다른 사용자가 공유한 말투 목록을 조회합니다")
+    @Operation(summary = "공개 말투 목록 조회(기본 말투 포함o)", description = "다른 사용자가 공유한 말투 목록을 조회합니다")
     @SecurityRequirement(name = "bearerAuth")
     public List<MaltuResponseDto> getPublicMaltus(@AuthenticationPrincipal User user) {
-        return maltuService.getPublicMaltus(user);
+        return maltuService.getPublicMaltus();
     }
 
     @GetMapping("/mine/list")

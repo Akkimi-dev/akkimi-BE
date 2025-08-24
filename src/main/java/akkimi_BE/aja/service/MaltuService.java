@@ -43,9 +43,9 @@ public class MaltuService {
         return MaltuResponseDto.from(maltu);
     }
 
-    public List<MaltuResponseDto> getPublicMaltus(User authUser) {
+    public List<MaltuResponseDto> getPublicMaltus() {
         return maltuRepository
-                .findByIsPublicTrueAndIsDefaultFalseOrderByCreatedAtDesc()
+                .findByIsPublicTrueOrderByCreatedAtDesc()
                 .stream()
                 .map(MaltuResponseDto::from)
                 .toList();

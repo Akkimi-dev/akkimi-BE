@@ -25,4 +25,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
             Pageable pageable);
     
     void deleteAllByUser(User user);
+    
+    @Query("SELECT c FROM ChatMessage c WHERE c.consumptionId = :consumptionId AND c.speaker = 'BOT' AND c.isFeedback = true")
+    ChatMessage findByConsumptionId(@Param("consumptionId") Long consumptionId);
 }
