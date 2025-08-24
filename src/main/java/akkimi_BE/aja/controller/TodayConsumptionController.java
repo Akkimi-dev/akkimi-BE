@@ -3,11 +3,13 @@ package akkimi_BE.aja.controller;
 
 import akkimi_BE.aja.dto.request.CreateTodayConsumptionRequestDto;
 import akkimi_BE.aja.dto.request.UpdateTodayConsumptionDto;
+import akkimi_BE.aja.dto.response.CreateConsumptionResponseDto;
 import akkimi_BE.aja.dto.response.DayConsumptionSummaryDto;
 import akkimi_BE.aja.dto.response.MonthConsumptionSummaryDto;
 import akkimi_BE.aja.dto.response.TodayConsumptionResponseDto;
 import akkimi_BE.aja.entity.TodayConsumption;
 import akkimi_BE.aja.entity.User;
+import akkimi_BE.aja.global.response.CommonResponse;
 import akkimi_BE.aja.service.TodayConsumptionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -33,13 +35,14 @@ public class TodayConsumptionController {
     @Operation(summary = "소비 내역 생성", description = "오늘의 소비 내역을 등록합니다.")
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/goals/{goalId}/days/{date}/consumptions")
-    public Long createConsumption(
+    public CommonResponse<CreateConsumptionResponseDto> createConsumption(
             @AuthenticationPrincipal User user,
             @PathVariable Long goalId,
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)LocalDate date,
             @RequestBody @Valid CreateTodayConsumptionRequestDto req
             ){
-        return todayConsumptionService.create(user, goalId, date, req);
+        CreateConsumptionResponseDto result = todayConsumptionService.create(user, goalId, date, req);
+        return CommonResponse.of(200, "요청이 성공적으로 처리되었습니다. ", result);
     }
 
     @Operation(summary = "소비 내역 수정", description = "기존 소비 내역을 수정합니다.")
@@ -105,6 +108,17 @@ public class TodayConsumptionController {
             @RequestParam("month") @DateTimeFormat(pattern = "yyyy-MM") YearMonth ym
     ){
         return todayConsumptionService.getMonthSummary(user, goalId, ym);
+    }
+
+
+    @Operation(summary = "소비 내역 단건 조회", description = "소비 내역 ID로 단건 상세를 조회합니다.")
+    @SecurityRequirement(name = "bearerAuth")
+    @GetMapping("/consumptions/{consumptionId}")
+    public TodayConsumptionResponseDto getOne(
+            @AuthenticationPrincipal User user,
+            @PathVariable Long consumptionId
+    ) {
+        return todayConsumptionService.getOne(user, consumptionId);
     }
 
 }
