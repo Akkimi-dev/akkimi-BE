@@ -22,7 +22,6 @@ import java.util.List;
 public class SavingGoalService {
 
     private final SavingGoalRepository savingGoalRepository;
-    private final UserRepository userRepository;
 
     public SavingGoalResponseDto getCurrentGoal(User user) {
         SavingGoal goal = savingGoalRepository

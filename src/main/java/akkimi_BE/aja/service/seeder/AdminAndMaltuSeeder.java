@@ -1,4 +1,4 @@
-package akkimi_BE.aja.service;
+package akkimi_BE.aja.service.seeder;
 
 import akkimi_BE.aja.entity.Maltu;
 import akkimi_BE.aja.entity.Role;
