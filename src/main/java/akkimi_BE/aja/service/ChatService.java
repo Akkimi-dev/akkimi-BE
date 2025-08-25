@@ -266,5 +266,13 @@ public class ChatService {
     public ChatMessage findFeedbackMessage(Long consumptionId) {
         return chatMessageRepository.findByConsumptionId(consumptionId);
     }
+    
+    // 여러 소비의 피드백을 한 번에 조회
+    public List<ChatMessage> findFeedbackMessages(List<Long> consumptionIds) {
+        if (consumptionIds == null || consumptionIds.isEmpty()) {
+            return List.of();
+        }
+        return chatMessageRepository.findByConsumptionIds(consumptionIds);
+    }
 }
 
