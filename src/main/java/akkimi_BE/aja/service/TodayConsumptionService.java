@@ -112,10 +112,24 @@ public class TodayConsumptionService {
 
         if (todayDate == null) return List.of();
 
-        return todayDate.getConsumptions().stream()
+        List<TodayConsumption> consumptions = todayDate.getConsumptions();
+        
+        // 모든 소비 ID 수집
+        List<Long> consumptionIds = consumptions.stream()
+                .map(TodayConsumption::getConsumptionId)
+                .toList();
+        
+        // 피드백 메시지들을 한 번에 조회
+        List<ChatMessage> feedbackMessages = chatService.findFeedbackMessages(consumptionIds);
+        
+        // consumptionId를 키로 하는 Map 생성
+        Map<Long, ChatMessage> feedbackMap = feedbackMessages.stream()
+                .collect(Collectors.toMap(ChatMessage::getConsumptionId, msg -> msg));
+
+        return consumptions.stream()
                 .map(consumption -> {
-                    // 각 소비에 대한 피드백 조회
-                    ChatMessage feedbackMessage = chatService.findFeedbackMessage(consumption.getConsumptionId());
+                    // Map에서 피드백 조회
+                    ChatMessage feedbackMessage = feedbackMap.get(consumption.getConsumptionId());
                     
                     // 피드백 DTO 생성
                     TodayConsumptionFeedbackResponseDto.ChatMessageDto feedbackDto = null;

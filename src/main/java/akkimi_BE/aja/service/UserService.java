@@ -40,27 +40,17 @@ public class UserService {
     private final RefreshTokenService refreshTokenService;
 
     //프로필 조회
-    public UserProfileResponseDto getUserProfile(User authUser) {
-        // 인증 주체의 id 기반으로 최신 상태를 DB에서 다시 조회(조인 페치)
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
-
+    public UserProfileResponseDto getUserProfile(User user) {
         return UserProfileResponseDto.from(user, user.getCharacter());
     }
 
     @Transactional
-    public void updateNickname(User authUser, String nickname) {
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
-
+    public void updateNickname(User user, String nickname) {
         user.updateNickname(nickname);
     }
 
     @Transactional
-    public Boolean updateCharacter(User authUser, Long characterId) {
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
-
+    public Boolean updateCharacter(User user, Long characterId) {
         // 캐릭터 존재 여부 확인
         Character character = characterRepository.findById(characterId)
                 .orElseThrow(() -> new CustomException(HttpErrorCode.CHARACTER_NOT_FOUND));
@@ -72,18 +62,12 @@ public class UserService {
     }
 
     @Transactional
-    public void updateRegion(User authUser, String region) {
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
-
+    public void updateRegion(User user, String region) {
         user.updateRegion(region);
     }
 
     @Transactional
-    public void updateCurrentMaltu(User authUser, Long maltuId) {
-        // 인증 주체의 최신 사용자 엔티티 조회
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+    public void updateCurrentMaltu(User user, Long maltuId) {
 
         // 말투 존재 여부 확인
         Maltu maltu = maltuRepository.findById(maltuId)
@@ -98,9 +82,7 @@ public class UserService {
         user.changeCurrentMaltu(maltu.getMaltuId());
     }
 
-    public CurrentMaltuResponseDto getCurrentMaltu(User authUser) {
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+    public CurrentMaltuResponseDto getCurrentMaltu(User user) {
 
         if (user.getCurrentMaltuId() == null) { //유저에 말투 설정x
             throw new CustomException(HttpErrorCode.USER_MALTU_NOT_SETTED);
@@ -217,31 +199,22 @@ public class UserService {
     }
 
     @Transactional
-    public void withdrawUser(User authUser) {
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+    public void withdrawUser(User user) {
 
         // 1. RefreshToken 삭제 (모든 토큰 무효화)
         refreshTokenRepository.deleteAllByUser(user);
-        log.info("사용자 {}의 RefreshToken 삭제 완료", user.getUserId());
 
         // 2. ChatMessage 삭제 (사용자 채팅 내역)
         chatMessageRepository.deleteAllByUser(user);
-        log.info("사용자 {}의 ChatMessage 삭제 완료", user.getUserId());
 
         // 3. 사용자가 생성한 Maltu 삭제
         maltuRepository.deleteAllByCreator(user);
-        log.info("사용자 {}의 Maltu 삭제 완료", user.getUserId());
 
         // 4. User 엔티티 삭제
         userRepository.delete(user);
-        log.info("사용자 {} 탈퇴 처리 완료", user.getUserId());
     }
 
-    public Boolean getIsSetup(User authUser) {
-        User user = userRepository.findById(authUser.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
-
+    public Boolean getIsSetup(User user) {
         return user.getIsSetup();
     }
 }

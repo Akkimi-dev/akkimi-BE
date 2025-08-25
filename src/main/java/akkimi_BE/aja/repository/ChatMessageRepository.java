@@ -28,4 +28,7 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     
     @Query("SELECT c FROM ChatMessage c WHERE c.consumptionId = :consumptionId AND c.speaker = 'BOT' AND c.isFeedback = true")
     ChatMessage findByConsumptionId(@Param("consumptionId") Long consumptionId);
+    
+    @Query("SELECT c FROM ChatMessage c WHERE c.consumptionId IN :consumptionIds AND c.speaker = 'BOT' AND c.isFeedback = true")
+    List<ChatMessage> findByConsumptionIds(@Param("consumptionIds") List<Long> consumptionIds);
 }
