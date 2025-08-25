@@ -22,4 +22,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     Optional<User> findByPhoneNumber(String phoneNumber);
+
+    // characterName만 바로 뽑기: Lazy 프록시 건드리지 않음
+    @Query("""
+           select c.characterName
+           from User u
+           join u.character c
+           where u.userId = :userId
+           """)
+    Optional<String> findCharacterNameByUserId(@Param("userId") Long userId);
 }
