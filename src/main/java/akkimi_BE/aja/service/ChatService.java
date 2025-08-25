@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -124,11 +125,15 @@ public class ChatService {
     
     // 사용자 메시지 조회 - 필요한 데이터만 추출하여 반환 (트랜잭션 없음)
     public MessageData getUserMessageData(User user, Long messageId) {
-        Object[] result = chatMessageRepository.findMessageDataById(messageId, user.getUserId())
-                .orElseThrow(() -> new CustomException(HttpErrorCode.MESSAGE_NOT_FOUND));
+        Optional<Object[]> result = chatMessageRepository.findMessageDataById(messageId, user.getUserId());
         
-        String message = (String) result[0];
-        Long maltuId = (Long) result[1];
+        if (result.isEmpty()) {
+            throw new CustomException(HttpErrorCode.MESSAGE_NOT_FOUND);
+        }
+        
+        Object[] data = result.get();
+        String message = (String) data[0];
+        Long maltuId = (Long) data[1];
         
         // 필요한 데이터만 추출하여 반환
         return new MessageData(message, maltuId);
