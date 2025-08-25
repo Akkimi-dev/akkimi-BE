@@ -128,7 +128,7 @@ public class SecurityConfig {
                 "http://localhost:5173",
                 "http://localhost:8080",     // 같은 서버
                 "https://yeogaeng.shop",
-                "https://akkimi-fe-eight.vercel.app"
+                "https://akkimi.kro.kr"
         ));
 
         // 허용할 HTTP 메서드
