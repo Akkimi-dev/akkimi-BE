@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
@@ -31,4 +32,11 @@ public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> 
     
     @Query("SELECT c FROM ChatMessage c WHERE c.consumptionId IN :consumptionIds AND c.speaker = 'BOT' AND c.isFeedback = true")
     List<ChatMessage> findByConsumptionIds(@Param("consumptionIds") List<Long> consumptionIds);
+    
+    @Query("""
+        SELECT c.message, c.maltuId
+        FROM ChatMessage c
+        WHERE c.chatId = :messageId AND c.user.userId = :userId
+    """)
+    Optional<Object[]> findMessageDataById(@Param("messageId") Long messageId, @Param("userId") Long userId);
 }

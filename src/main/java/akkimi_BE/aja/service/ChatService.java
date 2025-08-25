@@ -122,18 +122,16 @@ public class ChatService {
         private Long maltuId;
     }
     
-    // 사용자 메시지 조회 - 필요한 데이터만 추출하여 반환
-    @Transactional(readOnly = true)
+    // 사용자 메시지 조회 - 필요한 데이터만 추출하여 반환 (트랜잭션 없음)
     public MessageData getUserMessageData(User user, Long messageId) {
-        ChatMessage userMessage = chatMessageRepository.findById(messageId)
+        Object[] result = chatMessageRepository.findMessageDataById(messageId, user.getUserId())
                 .orElseThrow(() -> new CustomException(HttpErrorCode.MESSAGE_NOT_FOUND));
-
-        if (!userMessage.getUser().getUserId().equals(user.getUserId())) {
-            throw new CustomException(HttpErrorCode.FORBIDDEN_MESSAGE_ACCESS);
-        }
         
-        // 필요한 데이터만 추출하여 트랜잭션 종료
-        return new MessageData(userMessage.getMessage(), userMessage.getMaltuId());
+        String message = (String) result[0];
+        Long maltuId = (Long) result[1];
+        
+        // 필요한 데이터만 추출하여 반환
+        return new MessageData(message, maltuId);
     }
 
     // 2) 스트림 대화 답변 받기 - 트랜잭션 제거 (SSE 장시간 연결로 인한 DB 커넥션 고갈 방지)
