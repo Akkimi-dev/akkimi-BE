@@ -114,25 +114,34 @@ public class ChatService {
         return messageId;
     }
 
-    // 사용자 메시지 조회 - 별도 트랜잭션으로 분리
+    // 메시지 데이터 DTO
+    @lombok.Data
+    @lombok.AllArgsConstructor
+    private static class MessageData {
+        private String message;
+        private Long maltuId;
+    }
+    
+    // 사용자 메시지 조회 - 필요한 데이터만 추출하여 반환
     @Transactional(readOnly = true)
-    public ChatMessage getUserMessage(Long messageId, Long userId) {
+    public MessageData getUserMessageData(User user, Long messageId) {
         ChatMessage userMessage = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(HttpErrorCode.MESSAGE_NOT_FOUND));
 
-        if (!userMessage.getUser().getUserId().equals(userId)) {
+        if (!userMessage.getUser().getUserId().equals(user.getUserId())) {
             throw new CustomException(HttpErrorCode.FORBIDDEN_MESSAGE_ACCESS);
         }
         
-        return userMessage;
+        // 필요한 데이터만 추출하여 트랜잭션 종료
+        return new MessageData(userMessage.getMessage(), userMessage.getMaltuId());
     }
 
     // 2) 스트림 대화 답변 받기 - 트랜잭션 제거 (SSE 장시간 연결로 인한 DB 커넥션 고갈 방지)
     public SseEmitter streamReply(User user, Long messageId) {
-        // 트랜잭션 내에서 필요한 데이터만 조회
-        ChatMessage userMessage = getUserMessage(messageId, user.getUserId());
+        // 트랜잭션 내에서 필요한 데이터만 조회 (트랜잭션은 즉시 종료됨)
+        MessageData messageData = getUserMessageData(user, messageId);
 
-        //프롬프트
+        //프롬프트 - User 엔티티를 다시 사용하므로 나중에 수정 필요
         String systemPrompt = maltuService.resolveMaltuPrompt(user);
 
         SseEmitter emitter = new SseEmitter(0L);
@@ -152,12 +161,12 @@ public class ChatService {
                     stream = chatClient
                             .prompt()
                             .system(systemPrompt)
-                            .user(userMessage.getMessage())
+                            .user(messageData.getMessage())
                             .options(ChatOptions.builder().temperature(0.7).build())
                             .stream()
                             .content();
                 } catch (NonTransientAiException quotaEx) {
-                    handleQuotaFallback(emitter, user, userMessage, sb);
+                    handleQuotaFallback(emitter, user, messageData.getMaltuId(), sb);
                     return; // 더 진행하지 않고 종료
                 }
 
@@ -188,7 +197,7 @@ public class ChatService {
                             
                             try {
                                 // saveBotMessage는 자체 @Transactional을 가지고 있음
-                                Long savedBotId = saveBotMessage(user, userMessage.getMaltuId(), finalContent);
+                                Long savedBotId = saveBotMessage(user, messageData.getMaltuId(), finalContent);
                                 sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
                                 log.info("Bot response saved: {} chars", finalContent.length());
                             } catch (Exception e) {
@@ -215,13 +224,13 @@ public class ChatService {
 
 
     /** 요금/쿼터 초과 등 비재시도 오류일 때 사용자 친절 메시지로 종료(스트림 생성 단계에서 발생한 경우). */
-    private void handleQuotaFallback(SseEmitter emitter, User user, ChatMessage userMessage, StringBuilder sb) {
+    private void handleQuotaFallback(SseEmitter emitter, User user, Long maltuId, StringBuilder sb) {
         String fallback = "현재 AI 할당량이 초과되어 임시로 답변을 생성할 수 없어요. 잠시 후 다시 시도해 주세요 🙏";
         sb.append(fallback);
         sendEvent(emitter, "message", fallback);
 
         // saveBotMessage는 자체 @Transactional을 가지고 있음
-        Long savedBotId = saveBotMessage(user, userMessage.getMaltuId(), sb.toString());
+        Long savedBotId = saveBotMessage(user, maltuId, sb.toString());
         sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
         emitter.complete();
     }
