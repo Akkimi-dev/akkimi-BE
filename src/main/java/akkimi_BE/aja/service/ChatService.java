@@ -30,6 +30,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -274,7 +276,7 @@ public class ChatService {
     }
 
     // 챗봇 메시지 저장
-    @Transactional
+    @Transactional(propagation = REQUIRES_NEW)
     public Long saveBotMessage(User user, Long maltuId, String content) {
         ChatMessage savedBot = chatMessageRepository.save(
                 ChatMessage.of(user, maltuId, Speaker.BOT, content, false, null)
