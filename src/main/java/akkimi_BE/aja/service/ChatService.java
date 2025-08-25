@@ -32,7 +32,6 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
 public class ChatService {
 
     private final ChatClient chatClient;
@@ -41,6 +40,7 @@ public class ChatService {
     private final FeedbackPromptBuilder feedbackPromptBuilder;
 
     // 최근 대화 조회(limit 없으면 30개 기본값)
+    @Transactional(readOnly = true)
     public ChatHistoryResponseDto getMessages(User user, Integer limit, Long beforeId) {
         int size = Math.max(1, Math.min(limit == null ? 30 : limit, 100));
 
@@ -114,14 +114,23 @@ public class ChatService {
         return messageId;
     }
 
-    // 2) 스트림 대화 답변 받기 - 트랜잭션 제거 (SSE 장시간 연결로 인한 DB 커넥션 고갈 방지)
-    public SseEmitter streamReply(User user, Long messageId) {
+    // 사용자 메시지 조회 - 별도 트랜잭션으로 분리
+    @Transactional(readOnly = true)
+    public ChatMessage getUserMessage(Long messageId, Long userId) {
         ChatMessage userMessage = chatMessageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(HttpErrorCode.MESSAGE_NOT_FOUND));
 
-        if (!userMessage.getUser().getUserId().equals(user.getUserId())) {
+        if (!userMessage.getUser().getUserId().equals(userId)) {
             throw new CustomException(HttpErrorCode.FORBIDDEN_MESSAGE_ACCESS);
         }
+        
+        return userMessage;
+    }
+
+    // 2) 스트림 대화 답변 받기 - 트랜잭션 제거 (SSE 장시간 연결로 인한 DB 커넥션 고갈 방지)
+    public SseEmitter streamReply(User user, Long messageId) {
+        // 트랜잭션 내에서 필요한 데이터만 조회
+        ChatMessage userMessage = getUserMessage(messageId, user.getUserId());
 
         //프롬프트
         String systemPrompt = maltuService.resolveMaltuPrompt(user);
@@ -178,6 +187,7 @@ public class ChatService {
                             }
                             
                             try {
+                                // saveBotMessage는 자체 @Transactional을 가지고 있음
                                 Long savedBotId = saveBotMessage(user, userMessage.getMaltuId(), finalContent);
                                 sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
                                 log.info("Bot response saved: {} chars", finalContent.length());
@@ -204,13 +214,13 @@ public class ChatService {
     }
 
 
-
     /** 요금/쿼터 초과 등 비재시도 오류일 때 사용자 친절 메시지로 종료(스트림 생성 단계에서 발생한 경우). */
     private void handleQuotaFallback(SseEmitter emitter, User user, ChatMessage userMessage, StringBuilder sb) {
         String fallback = "현재 AI 할당량이 초과되어 임시로 답변을 생성할 수 없어요. 잠시 후 다시 시도해 주세요 🙏";
         sb.append(fallback);
         sendEvent(emitter, "message", fallback);
 
+        // saveBotMessage는 자체 @Transactional을 가지고 있음
         Long savedBotId = saveBotMessage(user, userMessage.getMaltuId(), sb.toString());
         sendEvent(emitter, "done", "{\"finalMessageId\":" + savedBotId + "}");
         emitter.complete();
@@ -263,11 +273,13 @@ public class ChatService {
     }
 
     // 일일소비에서 해당 소비의 피드백 받아오기(챗봇만)
+    @Transactional(readOnly = true)
     public ChatMessage findFeedbackMessage(Long consumptionId) {
         return chatMessageRepository.findByConsumptionId(consumptionId);
     }
     
     // 여러 소비의 피드백을 한 번에 조회
+    @Transactional(readOnly = true)
     public List<ChatMessage> findFeedbackMessages(List<Long> consumptionIds) {
         if (consumptionIds == null || consumptionIds.isEmpty()) {
             return List.of();
