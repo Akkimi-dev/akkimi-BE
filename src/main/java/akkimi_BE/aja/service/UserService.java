@@ -40,17 +40,25 @@ public class UserService {
     private final RefreshTokenService refreshTokenService;
 
     //프로필 조회
-    public UserProfileResponseDto getUserProfile(User user) {
+    public UserProfileResponseDto getUserProfile(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
         return UserProfileResponseDto.from(user, user.getCharacter());
     }
 
     @Transactional
-    public void updateNickname(User user, String nickname) {
+    public void updateNickname(User authUser, String nickname) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
         user.updateNickname(nickname);
     }
 
     @Transactional
-    public Boolean updateCharacter(User user, Long characterId) {
+    public Boolean updateCharacter(User authUser, Long characterId) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
         // 캐릭터 존재 여부 확인
         Character character = characterRepository.findById(characterId)
                 .orElseThrow(() -> new CustomException(HttpErrorCode.CHARACTER_NOT_FOUND));
@@ -62,12 +70,18 @@ public class UserService {
     }
 
     @Transactional
-    public void updateRegion(User user, String region) {
+    public void updateRegion(User authUser, String region) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
         user.updateRegion(region);
     }
 
     @Transactional
-    public void updateCurrentMaltu(User user, Long maltuId) {
+    public void updateCurrentMaltu(User authUser, Long maltuId) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
 
         // 말투 존재 여부 확인
         Maltu maltu = maltuRepository.findById(maltuId)
@@ -214,7 +228,10 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    public Boolean getIsSetup(User user) {
+    public Boolean getIsSetup(User authUser) {
+        User user = userRepository.findById(authUser.getUserId())
+                .orElseThrow(() -> new CustomException(HttpErrorCode.USER_NOT_FOUND));
+
         return user.getIsSetup();
     }
 }
