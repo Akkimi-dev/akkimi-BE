@@ -3,10 +3,13 @@ package akkimi_BE.aja.repository;
 import akkimi_BE.aja.entity.Maltu;
 import akkimi_BE.aja.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MaltuRepository extends JpaRepository<Maltu, Long> {
@@ -25,4 +28,13 @@ public interface MaltuRepository extends JpaRepository<Maltu, Long> {
     
     //사용자가 생성한 모든 말투 삭제
     void deleteAllByCreator(User creator);
+
+    @Query("""
+        select m.prompt
+        from Maltu m
+        where m.maltuId = :maltuId
+          and (m.creator.userId = :userId or m.isPublic = true)
+    """)
+    Optional<String> findPromptIfOwnedOrPublic(@Param("maltuId") Long maltuId,
+                                               @Param("userId") Long userId);
 }
