@@ -32,7 +32,7 @@ public class MaltuService {
                 .creator(authUser)
                 .maltuName(createMaltuRequestDto.getMaltuName())
                 .isDefault(false)
-                .isPublic(createMaltuRequestDto.getIsPublic())
+                .isPublic(true)
                 .prompt(createMaltuRequestDto.getPrompt())
                 .build();
 
