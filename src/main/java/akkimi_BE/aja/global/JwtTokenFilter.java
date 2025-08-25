@@ -90,7 +90,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             // 토큰이 유효한 경우 - 인증 정보 설정
             String socialId = jwtUtil.getSocialIdFromToken(token);
             if(socialId != null) {
-                Optional<User> user = userRepository.findBySocialId(socialId);
+                Optional<User> user = userRepository.findBySocialIdWithCharacter(socialId);
                 if(user.isPresent()) {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
