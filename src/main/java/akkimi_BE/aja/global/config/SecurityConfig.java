@@ -90,6 +90,7 @@ public class SecurityConfig {
                                 "/api/v1/auth/validate/**", // 중복 확인
                                 "/h2-console/**",      // H2 데이터베이스 콘솔
                                 "/favicon.ico",
+                                "/error",              // 에러 페이지 접근 허용
 
                                 //swagger 설정
                                 "/v3/api-docs/**",
